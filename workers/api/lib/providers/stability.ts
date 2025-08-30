@@ -42,23 +42,25 @@ No grey shading, no gradients, no color, no text, no logos. 1024x1024. High cont
   }
 
   private async callStabilityAPI(prompt: string, negativePrompt: string, seedInt: number): Promise<ArrayBuffer> {
+    // Create FormData for multipart/form-data request
+    const formData = new FormData();
+    formData.append('prompt', prompt);
+    formData.append('negative_prompt', negativePrompt);
+    formData.append('seed', seedInt.toString());
+    formData.append('width', '1024');
+    formData.append('height', '1024');
+    formData.append('output_format', 'png');
+    formData.append('cfg_scale', '7');
+    formData.append('steps', '20');
+
     const response = await fetch('https://api.stability.ai/v2beta/stable-image/generate/sd3', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
         'Accept': 'application/json'
+        // Don't set Content-Type - let FormData set it automatically
       },
-      body: JSON.stringify({
-        prompt,
-        negative_prompt: negativePrompt,
-        seed: seedInt,
-        width: 1024,
-        height: 1024,
-        output_format: 'png',
-        cfg_scale: 7,
-        steps: 20
-      })
+      body: formData
     });
 
     if (!response.ok) {
