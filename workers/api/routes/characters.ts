@@ -95,8 +95,8 @@ characterRoutes.post('/mint', requireAuth, async (c) => {
     };
 
     // Broadcast to real-time clients
-    const worldId = c.env.WORLD.idFromName('world-room');
-    const worldStub = c.env.WORLD.get(worldId);
+    const worldId = (c.env as any).WORLD.idFromName('world-room');
+    const worldStub = (c.env as any).WORLD.get(worldId);
     await worldStub.fetch('http://internal/broadcast', {
       method: 'POST',
       body: JSON.stringify({
@@ -182,8 +182,8 @@ characterRoutes.post('/:id/water', requireAuth, async (c) => {
     ).run();
 
     // Broadcast water event
-    const worldId = c.env.WORLD.idFromName('world-room');
-    const worldStub = c.env.WORLD.get(worldId);
+    const worldId = (c.env as any).WORLD.idFromName('world-room');
+    const worldStub = (c.env as any).WORLD.get(worldId);
     await worldStub.fetch('http://internal/broadcast', {
       method: 'POST',
       body: JSON.stringify({

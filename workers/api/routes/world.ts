@@ -162,8 +162,8 @@ worldRoutes.post('/admin/season', async (c) => {
     await c.env.CACHE.delete('world_state');
 
     // Broadcast update via Durable Object
-    const worldId = c.env.WORLD.idFromName('world-room');
-    const worldStub = c.env.WORLD.get(worldId);
+    const worldId = (c.env as any).WORLD.idFromName('world-room');
+    const worldStub = (c.env as any).WORLD.get(worldId);
     await worldStub.fetch('http://internal/broadcast', {
       method: 'POST',
       body: JSON.stringify({

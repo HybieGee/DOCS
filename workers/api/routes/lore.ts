@@ -172,8 +172,8 @@ loreRoutes.post('/:loreId/vote', requireAuth, async (c) => {
           .run();
 
         // Broadcast canon update
-        const worldId = c.env.WORLD.idFromName('world-room');
-        const worldStub = c.env.WORLD.get(worldId);
+        const worldId = (c.env as any).WORLD.idFromName('world-room');
+        const worldStub = (c.env as any).WORLD.get(worldId);
         await worldStub.fetch('http://internal/broadcast', {
           method: 'POST',
           body: JSON.stringify({
