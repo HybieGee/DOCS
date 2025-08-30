@@ -101,10 +101,10 @@ export class WorldRoom {
     const session = this.sessions.get(webSocket);
     if (!session) return;
 
-    switch (message.type) {
+    switch (message.type as string) {
       case 'auth':
         // Store user ID in session
-        session.userId = message.userId;
+        session.userId = message.userId as string;
         break;
 
       case 'ping':
@@ -112,7 +112,7 @@ export class WorldRoom {
         break;
 
       default:
-        console.log('Unknown message type:', message.type);
+        console.log('Unknown message type:', message.type as string);
     }
   }
 
