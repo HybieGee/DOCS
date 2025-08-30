@@ -1,3 +1,5 @@
+/// <reference types="@cloudflare/workers-types" />
+
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { setCookie, getCookie } from 'hono/cookie';

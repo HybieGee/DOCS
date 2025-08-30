@@ -1,3 +1,5 @@
+/// <reference types="@cloudflare/workers-types" />
+
 interface RealtimeMessage {
   type: 'character_spawn' | 'water' | 'level_up' | 'lore_canon' | 'milestone' | 'season_change';
   payload: Record<string, unknown>;
@@ -7,7 +9,7 @@ interface RealtimeMessage {
 export class WorldRoom {
   state: DurableObjectState;
   sessions: Map<WebSocket, { id: string; userId?: string }>;
-  worldState: any;
+  worldState: Record<string, unknown>;
 
   constructor(state: DurableObjectState) {
     this.state = state;
@@ -24,7 +26,7 @@ export class WorldRoom {
     this.state.blockConcurrencyWhile(async () => {
       const stored = await this.state.storage.get('worldState');
       if (stored) {
-        this.worldState = stored as any;
+        this.worldState = stored as Record<string, unknown>;
       }
     });
   }
@@ -95,7 +97,7 @@ export class WorldRoom {
     });
   }
 
-  async handleMessage(webSocket: WebSocket, message: any) {
+  async handleMessage(webSocket: WebSocket, message: Record<string, unknown>) {
     const session = this.sessions.get(webSocket);
     if (!session) return;
 
