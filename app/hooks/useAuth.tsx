@@ -115,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (user) {
-      setUser({ ...user, wallet_verified: true } as any);
+      setUser({ ...user, wallet_verified: true } as typeof user & { wallet_verified: boolean });
     }
   };
 

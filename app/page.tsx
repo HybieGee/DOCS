@@ -9,7 +9,7 @@ import { useAuth } from './hooks/useAuth';
 import type { Character } from '@/lib/types';
 
 export default function Home() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [worldState, setWorldState] = useState({
@@ -70,7 +70,7 @@ export default function Home() {
     return () => ws.close();
   };
 
-  const handleRealtimeMessage = (message: any) => {
+  const handleRealtimeMessage = (message: { type: string; payload: any }) => {
     switch (message.type) {
       case 'character_spawn':
         setCharacters((prev) => [message.payload, ...prev]);
@@ -107,7 +107,7 @@ export default function Home() {
         throw new Error(error.error || 'Failed to mint character');
       }
 
-      const data = await response.json();
+      await response.json();
       // Character will be added via realtime update
     } catch (error) {
       console.error('Mint error:', error);

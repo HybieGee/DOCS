@@ -56,8 +56,8 @@ export function SimpleAuthModal({ isOpen, onClose, defaultTab = 'login' }: Simpl
       setUsername('');
       setPassword('');
       setSolanaAddress('');
-    } catch (error: any) {
-      setError(error.message || 'Authentication failed');
+    } catch (error: unknown) {
+      setError((error as Error).message || 'Authentication failed');
     } finally {
       setLoading(false);
     }

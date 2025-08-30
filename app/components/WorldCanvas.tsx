@@ -1,12 +1,15 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import type { Character, WorldState } from '@/lib/types';
+import type { Character } from '@/lib/types';
 
 interface WorldCanvasProps {
   characters: Character[];
-  worldState: any;
+  worldState: {
+    total_characters: number;
+    season: string;
+    current_phase: string;
+  };
   onCharacterClick: (character: Character) => void;
 }
 
@@ -49,7 +52,7 @@ export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldC
     };
   }, [characters, worldState]);
 
-  const drawWorldBackground = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, state: any) => {
+  const drawWorldBackground = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, state: { total_characters: number }) => {
     // Draw ground
     const gradient = ctx.createLinearGradient(0, canvas.height - 200, 0, canvas.height);
     gradient.addColorStop(0, 'rgba(34, 139, 34, 0.3)');

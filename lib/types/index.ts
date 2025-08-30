@@ -68,7 +68,7 @@ export interface WorldState {
   updated_at: string;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -99,7 +99,7 @@ export interface LoreSubmission {
 
 export interface RealtimeMessage {
   type: 'character_spawn' | 'water' | 'level_up' | 'lore_canon' | 'milestone' | 'season_change';
-  payload: any;
+  payload: Record<string, unknown>;
   timestamp: string;
 }
 

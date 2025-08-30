@@ -55,7 +55,7 @@ export async function verifyJWT(
 export function hashPassword(password: string): string {
   // Note: In production, use proper hashing with argon2 or bcrypt
   // For now, using a simple hash for development
-  const crypto = globalThis.crypto || require('crypto').webcrypto;
+  const crypto = globalThis.crypto;
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
   return crypto.subtle.digest('SHA-256', data).then((hash) => {

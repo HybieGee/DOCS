@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/app/hooks/useAuth';
-import type { Character, Lore } from '@/lib/types';
+import type { Character } from '@/lib/types';
 import { shortenAddress } from '@/lib/utils/solana';
 
 interface CharacterCardProps {
@@ -33,7 +33,7 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
         throw new Error(error.error || 'Failed to water character');
       }
 
-      const data = await response.json();
+      await response.json();
       // Update will come through realtime
     } catch (error) {
       console.error('Water error:', error);
