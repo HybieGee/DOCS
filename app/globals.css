@@ -24,7 +24,7 @@ html, body {
 }
 
 body {
-  background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
+  background: #000000;
   min-height: 100vh;
   color: var(--foreground);
   font-family: 'Inter', system-ui, sans-serif;
@@ -68,11 +68,120 @@ body {
   animation: shimmer 3s infinite;
 }
 
-/* Glass morphism effects */
+/* Glass morphism effects - minimalist */
 .glass {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Full screen layout classes */
+.full-screen-world {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+}
+
+/* Top UI Bar */
+.top-ui-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  backdrop-filter: blur(16px);
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.top-left-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.top-center-button {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.top-right-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+/* Bottom UI Bar */
+.bottom-ui-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(16px);
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Minimalist button styles */
+.minimal-button {
+  background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.minimal-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.minimal-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Statistics display */
+.stats-display {
+  position: fixed;
+  top: 90px;
+  right: 24px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  font-size: 14px;
+  color: white;
+  backdrop-filter: blur(8px);
 }
 
 /* Water ripple effect */
