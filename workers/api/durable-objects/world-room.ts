@@ -6,10 +6,18 @@ interface RealtimeMessage {
   timestamp?: string;
 }
 
+interface WorldState {
+  total_characters: number;
+  total_waters: number;
+  season: string;
+  current_phase: string;
+  last_milestone_reached: number;
+}
+
 export class WorldRoom {
   state: DurableObjectState;
   sessions: Map<WebSocket, { id: string; userId?: string }>;
-  worldState: Record<string, unknown>;
+  worldState: WorldState;
 
   constructor(state: DurableObjectState) {
     this.state = state;
@@ -26,7 +34,7 @@ export class WorldRoom {
     this.state.blockConcurrencyWhile(async () => {
       const stored = await this.state.storage.get('worldState');
       if (stored) {
-        this.worldState = stored as Record<string, unknown>;
+        this.worldState = stored as WorldState;
       }
     });
   }
@@ -151,13 +159,13 @@ export class WorldRoom {
         break;
 
       case 'milestone':
-        this.worldState = { ...this.worldState, ...message.payload };
+        this.worldState = { ...this.worldState, ...(message.payload as Partial<WorldState>) };
         changed = true;
         break;
 
       case 'season_change':
-        this.worldState.season = message.payload.season;
-        this.worldState.current_phase = message.payload.phase;
+        this.worldState.season = message.payload.season as string;
+        this.worldState.current_phase = message.payload.phase as string;
         changed = true;
         break;
     }
