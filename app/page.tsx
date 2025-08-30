@@ -70,7 +70,7 @@ export default function Home() {
     return () => ws.close();
   };
 
-  const handleRealtimeMessage = (message: { type: string; payload: any }) => {
+  const handleRealtimeMessage = (message: { type: string; payload: Record<string, unknown> }) => {
     switch (message.type) {
       case 'character_spawn':
         setCharacters((prev) => [message.payload, ...prev]);
