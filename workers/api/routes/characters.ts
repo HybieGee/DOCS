@@ -27,8 +27,8 @@ const requireAuth = async (c: any, next: any) => {
 // Mint a new character
 characterRoutes.post('/mint', requireAuth, async (c) => {
   try {
-    const userId = c.get('userId');
-    const userAddress = c.get('userAddress');
+    const userId = c.get('userId' as never) as string;
+    const userAddress = c.get('userAddress' as never) as string;
     const body = await c.req.json<{ turnstile_token?: string }>();
 
     // Check daily mint limit
@@ -115,7 +115,7 @@ characterRoutes.post('/mint', requireAuth, async (c) => {
 // Water a character
 characterRoutes.post('/:id/water', requireAuth, async (c) => {
   try {
-    const userId = c.get('userId');
+    const userId = c.get('userId' as never) as string;
     const characterId = c.param('id');
 
     // Check if character exists

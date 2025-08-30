@@ -26,7 +26,7 @@ const requireAuth = async (c: any, next: any) => {
 // Submit lore for a character
 loreRoutes.post('/characters/:characterId/lore', requireAuth, async (c) => {
   try {
-    const userId = c.get('userId');
+    const userId = c.get('userId' as never) as string;
     const characterId = c.param('characterId');
     const body = await c.req.json<{ body: string; turnstile_token?: string }>();
 
@@ -98,7 +98,7 @@ loreRoutes.post('/characters/:characterId/lore', requireAuth, async (c) => {
 // Vote on lore
 loreRoutes.post('/:loreId/vote', requireAuth, async (c) => {
   try {
-    const userId = c.get('userId');
+    const userId = c.get('userId' as never) as string;
     const loreId = c.param('loreId');
 
     // Check if lore exists
