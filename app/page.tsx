@@ -116,40 +116,69 @@ export default function Home() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Rain Animation Background */}
+      {/* Background Effects */}
       <div className="absolute inset-0 pointer-events-none">
         <RainAnimation />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-900/10 to-purple-900/20" />
+        
+        {/* Floating Particles */}
+        <div className="absolute inset-0">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-2 h-2 bg-blue-400/30 rounded-full float"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 6}s`,
+              }}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Header */}
-      <header className="relative z-10 bg-black/30 backdrop-blur-md border-b border-white/10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="relative z-10 glass border-b border-white/10">
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
-              Droplets of Creation
-            </h1>
-            <span className="text-yellow-400 font-bold">$DOC</span>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-2xl glow-blue">
+                💧
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold gradient-text">
+                  Droplets of Creation
+                </h1>
+                <span className="text-yellow-400 text-sm font-semibold tracking-wide">$DOC</span>
+              </div>
+            </div>
           </div>
           
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-8">
             {/* World Stats */}
-            <div className="flex gap-4 text-white/80 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="text-blue-400">💧</span>
-                <span>{worldState.total_characters} Characters</span>
+            <div className="flex gap-6 text-white/90 text-sm font-medium">
+              <div className="flex items-center gap-2 glass px-3 py-2 rounded-full">
+                <div className="w-6 h-6 bg-blue-500/20 rounded-full flex items-center justify-center">
+                  <span className="text-blue-400 text-xs">💧</span>
+                </div>
+                <span>{worldState.total_characters.toLocaleString()} Characters</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-green-400">🌱</span>
-                <span>{worldState.total_waters} Waters</span>
+              <div className="flex items-center gap-2 glass px-3 py-2 rounded-full">
+                <div className="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center">
+                  <span className="text-green-400 text-xs">🌱</span>
+                </div>
+                <span>{worldState.total_waters.toLocaleString()} Waters</span>
               </div>
             </div>
             
             {user ? (
               <div className="flex items-center gap-4">
-                <span className="text-white">Welcome, {user.username}!</span>
+                <div className="text-white/90 font-medium">
+                  Welcome, <span className="text-blue-400">{user.username}</span>!
+                </div>
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="text-white/80 hover:text-white transition-colors"
+                  className="glass px-4 py-2 rounded-lg hover:bg-white/20 transition-all text-white/80 hover:text-white"
                 >
                   Account
                 </button>
@@ -157,7 +186,7 @@ export default function Home() {
             ) : (
               <button
                 onClick={() => setShowAuthModal(true)}
-                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all"
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all btn-hover glow-blue"
               >
                 Login / Sign Up
               </button>
@@ -169,49 +198,126 @@ export default function Home() {
       {/* Main Content */}
       <main className="relative z-10">
         {/* Hero Section */}
-        <section className="container mx-auto px-4 py-12 text-center">
+        <section className="container mx-auto px-6 py-20 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="max-w-3xl mx-auto"
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="max-w-5xl mx-auto"
           >
-            <h2 className="text-5xl font-bold text-white mb-6">
-              Where Raindrops Become Legends
-            </h2>
-            <p className="text-xl text-white/80 mb-8">
-              Mint your droplet, water characters to help them evolve, and shape the narrative of our living world.
-            </p>
-            
-            {user ? (
-              <button
-                onClick={handleMint}
-                disabled={isMinting}
-                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-full text-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:scale-100"
+            <div className="mb-8">
+              <motion.h2 
+                className="text-7xl md:text-8xl font-bold gradient-text mb-4"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1.2, delay: 0.2 }}
               >
-                {isMinting ? 'Minting...' : 'Mint a Droplet 💧'}
-              </button>
-            ) : (
-              <div className="space-y-4">
-                <p className="text-white/60">Create an account to start minting</p>
+                Where Raindrops
+              </motion.h2>
+              <motion.h2 
+                className="text-7xl md:text-8xl font-bold text-white mb-8"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1.2, delay: 0.4 }}
+              >
+                Become Legends
+              </motion.h2>
+            </div>
+
+            <motion.p 
+              className="text-2xl md:text-3xl text-white/90 mb-12 font-light leading-relaxed max-w-4xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+            >
+              Mint your droplet, water characters to help them evolve, and shape the narrative of our living world.
+            </motion.p>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.8 }}
+            >
+              {user ? (
                 <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold rounded-full text-lg transition-all transform hover:scale-105"
+                  onClick={handleMint}
+                  disabled={isMinting}
+                  className="group relative px-12 py-6 bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 hover:from-blue-700 hover:via-purple-700 hover:to-cyan-700 text-white font-bold rounded-2xl text-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:scale-100 glow-blue btn-hover ripple-effect"
                 >
-                  Create Account / Login
+                  <div className="flex items-center gap-3">
+                    {isMinting ? (
+                      <>
+                        <div className="w-6 h-6 loading-spinner" />
+                        <span>Minting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-2xl">💧</span>
+                        <span>Mint a Droplet</span>
+                      </>
+                    )}
+                  </div>
                 </button>
+              ) : (
+                <div className="space-y-6">
+                  <p className="text-white/70 text-lg">Create an account to start your legend</p>
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="group relative px-12 py-6 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 text-white font-bold rounded-2xl text-xl transition-all transform hover:scale-105 glow-green btn-hover shimmer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">🌟</span>
+                      <span>Create Account / Login</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Feature Cards */}
+            <motion.div 
+              className="grid md:grid-cols-3 gap-8 mt-20"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 1 }}
+            >
+              <div className="glass p-8 rounded-2xl glow-blue">
+                <div className="text-4xl mb-4">💧</div>
+                <h3 className="text-xl font-semibold text-white mb-3">Mint Droplets</h3>
+                <p className="text-white/70">Create unique character droplets that evolve and grow with your care.</p>
               </div>
-            )}
+              <div className="glass p-8 rounded-2xl glow-purple">
+                <div className="text-4xl mb-4">🌱</div>
+                <h3 className="text-xl font-semibold text-white mb-3">Water & Evolve</h3>
+                <p className="text-white/70">Give water to characters to help them level up and unlock new abilities.</p>
+              </div>
+              <div className="glass p-8 rounded-2xl glow-green">
+                <div className="text-4xl mb-4">📖</div>
+                <h3 className="text-xl font-semibold text-white mb-3">Shape Lore</h3>
+                <p className="text-white/70">Submit stories and vote on canon lore that becomes part of the world.</p>
+              </div>
+            </motion.div>
           </motion.div>
         </section>
 
         {/* World Canvas */}
-        <section className="relative h-[600px] overflow-hidden">
-          <WorldCanvas
-            characters={characters}
-            worldState={worldState}
-            onCharacterClick={setSelectedCharacter}
-          />
+        <section className="relative h-[700px] overflow-hidden mt-20">
+          <div className="absolute inset-0 glass border-y border-white/10">
+            <WorldCanvas
+              characters={characters}
+              worldState={worldState}
+              onCharacterClick={setSelectedCharacter}
+            />
+          </div>
+          
+          {/* Season Indicator */}
+          <div className="absolute top-6 left-6 glass px-4 py-2 rounded-full">
+            <div className="flex items-center gap-2 text-white/90">
+              <span className="capitalize font-medium">{worldState.season}</span>
+              <span className="text-yellow-400">•</span>
+              <span className="capitalize">{worldState.current_phase}</span>
+            </div>
+          </div>
         </section>
 
         {/* Selected Character Card */}
@@ -232,7 +338,7 @@ export default function Home() {
   );
 }
 
-// Rain Animation Component
+// Enhanced Rain Animation Component
 function RainAnimation() {
   const [dimensions, setDimensions] = useState({ width: 1200, height: 800 });
 
@@ -251,29 +357,51 @@ function RainAnimation() {
 
   return (
     <div className="rain-container">
-      {Array.from({ length: 50 }).map((_, i) => (
+      {Array.from({ length: 80 }).map((_, i) => (
         <motion.div
           key={i}
           className="raindrop"
-          initial={{ y: -100, x: Math.random() * dimensions.width }}
-          animate={{
-            y: dimensions.height + 100,
+          initial={{ 
+            y: -50, 
             x: Math.random() * dimensions.width,
+            scale: Math.random() * 0.5 + 0.5
+          }}
+          animate={{
+            y: dimensions.height + 50,
+            x: Math.random() * dimensions.width + (Math.random() - 0.5) * 100,
           }}
           transition={{
-            duration: Math.random() * 2 + 1,
+            duration: Math.random() * 3 + 2,
             repeat: Infinity,
             ease: 'linear',
-            delay: Math.random() * 2,
+            delay: Math.random() * 4,
           }}
           style={{
             position: 'absolute',
-            width: '2px',
-            height: '10px',
-            background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.6))',
+            width: `${Math.random() * 2 + 1}px`,
+            height: `${Math.random() * 15 + 10}px`,
+            background: `linear-gradient(to bottom, transparent, rgba(59, 130, 246, ${0.3 + Math.random() * 0.4}))`,
+            borderRadius: '0 0 50% 50%',
+            filter: 'blur(0.5px)',
           }}
         />
       ))}
+      
+      {/* Lightning effect occasional */}
+      <motion.div
+        className="absolute inset-0"
+        animate={{
+          opacity: [0, 0, 0, 0, 0, 0.1, 0, 0.3, 0, 0, 0],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: 'linear',
+        }}
+        style={{
+          background: 'linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%)',
+        }}
+      />
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { setCookie, getCookie } from 'hono/cookie';
-// import { authRoutes } from './routes/auth';
+import { authRoutes } from './routes/auth';
 // import { characterRoutes } from './routes/characters';
 // import { loreRoutes } from './routes/lore';
 import { worldRoutes } from './routes/world';
@@ -32,6 +32,8 @@ app.use(
         'http://localhost:3000',
         'https://droplets-of-creation.pages.dev',
         'https://dropletsofcreation.com',
+        'https://137e551d.docs-6aq.pages.dev',
+        'https://fa143249.docs-6aq.pages.dev',
       ];
       return allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
     },
@@ -55,8 +57,8 @@ app.get('/debug/db', async (c) => {
   }
 });
 
-// Mount routes (only world for now)
-// app.route('/api/auth', authRoutes);
+// Mount routes
+app.route('/api/auth', authRoutes);
 // app.route('/api/characters', characterRoutes);
 // app.route('/api', loreRoutes);  // Lore routes include /characters/:id/lore prefix
 app.route('/api/world', worldRoutes);
