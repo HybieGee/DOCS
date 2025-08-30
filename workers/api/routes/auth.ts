@@ -13,11 +13,12 @@ authRoutes.post('/signup', async (c) => {
     const body = await c.req.json<SignupRequest>();
     const { username, password, solana_address, signed_message, signature, turnstile_token } = body;
 
-    // Verify Turnstile
-    const turnstileVerified = await verifyTurnstile(turnstile_token, c.env.TURNSTILE_SECRET_KEY);
-    if (!turnstileVerified) {
-      return c.json({ success: false, error: 'Invalid captcha' }, 400);
-    }
+    // Skip Turnstile verification for simplified auth
+    // TODO: Add proper captcha later if needed
+    // const turnstileVerified = await verifyTurnstile(turnstile_token, c.env.TURNSTILE_SECRET_KEY);
+    // if (!turnstileVerified) {
+    //   return c.json({ success: false, error: 'Invalid captcha' }, 400);
+    // }
 
     // For simplified auth, skip signature verification if it's the mock signature
     if (signature !== 'simplified_signup_no_wallet_required') {

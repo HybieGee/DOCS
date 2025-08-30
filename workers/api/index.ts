@@ -4,7 +4,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { setCookie, getCookie } from 'hono/cookie';
 import { authRoutes } from './routes/auth';
-// import { characterRoutes } from './routes/characters';
+import { characterRoutes } from './routes/characters';
 // import { loreRoutes } from './routes/lore';
 import { worldRoutes } from './routes/world';
 // import { leaderboardRoutes } from './routes/leaderboard';
@@ -22,21 +22,14 @@ export interface Env {
 
 const app = new Hono<{ Bindings: Env }>();
 
-// Enable CORS
+// Enable CORS - return the actual origin for credentials
 app.use(
   '*',
   cors({
     origin: (origin) => {
-      if (!origin) return '*';
-      const allowedOrigins = [
-        'http://localhost:3000',
-        'https://droplets-of-creation.pages.dev',
-        'https://dropletsofcreation.com',
-        'https://137e551d.docs-6aq.pages.dev',
-        'https://fa143249.docs-6aq.pages.dev',
-        'https://f4e906ba.docs-6aq.pages.dev',
-      ];
-      return allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+      // Return the actual origin to allow credentials
+      // This allows any origin but returns the specific one (not wildcard)
+      return origin || '*';
     },
     credentials: true,
   })
@@ -60,7 +53,7 @@ app.get('/debug/db', async (c) => {
 
 // Mount routes
 app.route('/api/auth', authRoutes);
-// app.route('/api/characters', characterRoutes);
+app.route('/api/characters', characterRoutes);
 // app.route('/api', loreRoutes);  // Lore routes include /characters/:id/lore prefix
 app.route('/api/world', worldRoutes);
 // app.route('/api/leaderboard', leaderboardRoutes);

@@ -27,3 +27,5 @@ bucket_name = "droplets-media"
 
 [vars]
 ENVIRONMENT = "development"
+JWT_SECRET = "development-jwt-secret-key-change-in-production"
+TURNSTILE_SECRET_KEY = "dummy-turnstile-key"
