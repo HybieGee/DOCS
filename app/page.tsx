@@ -18,7 +18,8 @@ export default function Home() {
     season: 'spring',
     current_phase: 'day',
   });
-  const [isMinting, setIsMinting] = useState(false);\n  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isMinting, setIsMinting] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     fetchWorldState();
@@ -145,7 +146,7 @@ export default function Home() {
               </div>
             </div>
             
-{user ? (
+            {user ? (
               <div className="flex items-center gap-4">
                 <span className="text-white">Welcome, {user.username}!</span>
                 <button
