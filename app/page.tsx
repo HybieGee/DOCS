@@ -49,7 +49,7 @@ export default function Home() {
   const handleRealtimeMessage = useCallback((message: { type: string; payload: Record<string, unknown> }) => {
     switch (message.type) {
       case 'character_spawn':
-        setCharacters((prev) => [message.payload as Character, ...prev]);
+        setCharacters((prev) => [message.payload as unknown as Character, ...prev]);
         break;
       case 'water':
       case 'level_up':
