@@ -46,12 +46,12 @@ export default function Home() {
     }
   }, []);
 
-  // Auto-refresh data every 5 seconds for responsiveness
+  // Auto-refresh data every 30 seconds to prevent scrollbar bug
   useEffect(() => {
     const interval = setInterval(() => {
       fetchWorldState();
       fetchCharacters();
-    }, 5000); // Refresh every 5 seconds
+    }, 30000); // Refresh every 30 seconds
 
     return () => clearInterval(interval);
   }, [fetchWorldState, fetchCharacters]);
@@ -133,7 +133,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="fixed inset-0 bg-black overflow-hidden">
       {/* Background Rain Animation */}
       <RainAnimation />
       
@@ -203,8 +203,18 @@ export default function Home() {
 
         {/* Top Right - Future buttons placeholder */}
         <div className="top-right-buttons">
-          <button className="minimal-button text-xs">Info</button>
-          <button className="minimal-button text-xs">Lore</button>
+          <button 
+            className="minimal-button text-xs"
+            onClick={() => alert('Info coming soon!')}
+          >
+            Info
+          </button>
+          <button 
+            className="minimal-button text-xs"
+            onClick={() => alert('Lore system coming soon!')}
+          >
+            Lore
+          </button>
         </div>
       </div>
 
