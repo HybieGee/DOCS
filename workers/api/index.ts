@@ -51,7 +51,7 @@ app.get('/debug/db', async (c) => {
     const data = await c.env.DB.prepare('SELECT * FROM world_state WHERE id = 1').first();
     return c.json({ success: true, count, data });
   } catch (error) {
-    return c.json({ success: false, error: error.message });
+    return c.json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 
