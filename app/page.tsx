@@ -134,8 +134,16 @@ export default function Home() {
 
   return (
     <div className="fixed inset-0 bg-black overflow-hidden">
-      {/* Background Rain Animation */}
-      <RainAnimation />
+      {/* Background Video */}
+      <video
+        className="absolute inset-0 w-full h-full object-cover z-0"
+        autoPlay
+        muted
+        loop
+        playsInline
+      >
+        <source src="/loopback.mp4" type="video/mp4" />
+      </video>
       
       {/* Full Screen World View */}
       <div className="full-screen-world">
