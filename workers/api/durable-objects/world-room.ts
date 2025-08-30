@@ -10,7 +10,7 @@ interface WorldState {
   total_characters: number;
   total_waters: number;
   season: string;
-  current_phase: string;
+  current_phase: 'dawn' | 'day' | 'dusk' | 'night';
   last_milestone_reached: number;
 }
 
@@ -165,7 +165,7 @@ export class WorldRoom {
 
       case 'season_change':
         this.worldState.season = message.payload.season as string;
-        this.worldState.current_phase = message.payload.phase as string;
+        this.worldState.current_phase = message.payload.phase as 'dawn' | 'day' | 'dusk' | 'night';
         changed = true;
         break;
     }
