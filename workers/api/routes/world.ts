@@ -61,7 +61,7 @@ worldRoutes.get('/state', async (c) => {
     return c.json({ success: true, data: worldState });
   } catch (error) {
     console.error('World state error:', error);
-    return c.json({ success: false, error: 'Failed to get world state', details: error.message }, 500);
+    return c.json({ success: false, error: 'Failed to get world state', details: error instanceof Error ? error.message : 'Unknown error' }, 500);
   }
 });
 
