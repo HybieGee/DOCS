@@ -9,11 +9,11 @@ name = "droplets-api-production"
 [[d1_databases]]
 binding = "DB"
 database_name = "droplets-db"
-database_id = "YOUR_D1_DATABASE_ID_HERE"
+database_id = "ffdec4f8-a0ca-447c-8ad4-186eae2bf33e"
 
 [[kv_namespaces]]
 binding = "CACHE"
-id = "YOUR_KV_NAMESPACE_ID_HERE"
+id = "aa1fb3b47d5a46b6802b6b2973f4cf28"
 
 [[r2_buckets]]
 binding = "BUCKET"
