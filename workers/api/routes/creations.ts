@@ -15,8 +15,8 @@ async function checkRateLimit(c: any, key: string): Promise<boolean> {
     return false; // Rate limited
   }
   
-  // Set rate limit (1 creation per 10 seconds)
-  await c.env.CACHE.put(key, '1', { expirationTtl: 10 });
+  // Set rate limit (1 creation per 60 seconds - minimum KV TTL)
+  await c.env.CACHE.put(key, '1', { expirationTtl: 60 });
   return true;
 }
 
@@ -64,7 +64,7 @@ creationRoutes.post('/', async (c) => {
     
     const canCreate = await checkRateLimit(c, rateLimitKey);
     if (!canCreate) {
-      return c.json({ success: false, error: 'Rate limit exceeded. Please wait 10 seconds between creations.' }, 429);
+      return c.json({ success: false, error: 'Rate limit exceeded. Please wait 60 seconds between creations.' }, 429);
     }
 
     // Validate level
