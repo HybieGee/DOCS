@@ -357,49 +357,52 @@ function RainAnimation() {
 
   return (
     <div className="rain-container">
-      {Array.from({ length: 80 }).map((_, i) => (
-        <motion.div
-          key={i}
-          className="raindrop"
-          initial={{ 
-            y: -50, 
-            x: Math.random() * dimensions.width,
-            scale: Math.random() * 0.5 + 0.5
-          }}
-          animate={{
-            y: dimensions.height + 50,
-            x: Math.random() * dimensions.width + (Math.random() - 0.5) * 100,
-          }}
-          transition={{
-            duration: Math.random() * 3 + 2,
-            repeat: Infinity,
-            ease: 'linear',
-            delay: Math.random() * 4,
-          }}
-          style={{
-            position: 'absolute',
-            width: `${Math.random() * 2 + 1}px`,
-            height: `${Math.random() * 15 + 10}px`,
-            background: `linear-gradient(to bottom, transparent, rgba(59, 130, 246, ${0.3 + Math.random() * 0.4}))`,
-            borderRadius: '0 0 50% 50%',
-            filter: 'blur(0.5px)',
-          }}
-        />
-      ))}
+      {Array.from({ length: 60 }).map((_, i) => {
+        const startX = Math.random() * dimensions.width;
+        return (
+          <motion.div
+            key={i}
+            className="raindrop"
+            initial={{ 
+              y: -100, 
+              x: startX,
+              scale: Math.random() * 0.3 + 0.7
+            }}
+            animate={{
+              y: dimensions.height + 100,
+              x: startX + (Math.random() - 0.5) * 20, // Very slight drift
+            }}
+            transition={{
+              duration: Math.random() * 2 + 3, // Slower: 3-5 seconds
+              repeat: Infinity,
+              ease: 'linear',
+              delay: Math.random() * 5,
+            }}
+            style={{
+              position: 'absolute',
+              width: `${Math.random() * 1.5 + 0.5}px`, // Thinner raindrops
+              height: `${Math.random() * 20 + 15}px`, // Longer raindrops
+              background: `linear-gradient(to bottom, transparent, rgba(59, 130, 246, ${0.4 + Math.random() * 0.3}))`,
+              borderRadius: '0 0 50% 50%',
+              filter: 'blur(0.3px)',
+            }}
+          />
+        );
+      })}
       
-      {/* Lightning effect occasional */}
+      {/* Occasional gentle lightning */}
       <motion.div
         className="absolute inset-0"
         animate={{
-          opacity: [0, 0, 0, 0, 0, 0.1, 0, 0.3, 0, 0, 0],
+          opacity: [0, 0, 0, 0, 0, 0, 0, 0.05, 0, 0.15, 0, 0, 0, 0, 0],
         }}
         transition={{
-          duration: 8,
+          duration: 15,
           repeat: Infinity,
           ease: 'linear',
         }}
         style={{
-          background: 'linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%)',
+          background: 'linear-gradient(180deg, transparent 30%, rgba(255,255,255,0.05) 50%, transparent 70%)',
         }}
       />
     </div>

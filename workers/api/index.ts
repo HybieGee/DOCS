@@ -34,6 +34,7 @@ app.use(
         'https://dropletsofcreation.com',
         'https://137e551d.docs-6aq.pages.dev',
         'https://fa143249.docs-6aq.pages.dev',
+        'https://f4e906ba.docs-6aq.pages.dev',
       ];
       return allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
     },
