@@ -10,7 +10,7 @@ import type { Character } from '@/lib/types';
 import { getApiUrl, getWebSocketUrl } from '@/lib/utils/api';
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [worldState, setWorldState] = useState({
@@ -181,6 +181,12 @@ export default function Home() {
                   className="glass px-4 py-2 rounded-lg hover:bg-white/20 transition-all text-white/80 hover:text-white"
                 >
                   Account
+                </button>
+                <button
+                  onClick={() => logout()}
+                  className="glass px-4 py-2 rounded-lg hover:bg-red-500/20 transition-all text-white/80 hover:text-red-400"
+                >
+                  Logout
                 </button>
               </div>
             ) : (

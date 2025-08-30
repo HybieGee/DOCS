@@ -66,8 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(result.data.user);
     setCookie('session', result.data.token, {
       maxAge: 7 * 24 * 60 * 60,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
+      secure: true, // Always secure for cross-origin
     });
   };
 
@@ -88,8 +88,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(result.data.user);
     setCookie('session', result.data.token, {
       maxAge: 7 * 24 * 60 * 60,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
+      secure: true, // Always secure for cross-origin
     });
   };
 

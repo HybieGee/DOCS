@@ -10,13 +10,15 @@ export const characterRoutes = new Hono<{ Bindings: Env }>();
 // Middleware to verify auth
 const requireAuth = async (c: any, next: any) => {
   const token = getCookie(c, 'session');
+  
   if (!token) {
-    return c.json({ success: false, error: 'Unauthorized' }, 401);
+    return c.json({ success: false, error: 'No session token found. Please log in again.' }, 401);
   }
 
   const payload = await verifyJWT(token, c.env.JWT_SECRET);
+  
   if (!payload) {
-    return c.json({ success: false, error: 'Unauthorized' }, 401);
+    return c.json({ success: false, error: 'Session expired. Please log in again.' }, 401);
   }
 
   c.set('userId', payload.sub);

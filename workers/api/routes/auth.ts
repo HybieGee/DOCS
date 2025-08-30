@@ -68,12 +68,13 @@ authRoutes.post('/signup', async (c) => {
       .bind(sessionId, userId, token, expiresAt)
       .run();
 
-    // Set cookie
+    // Set cookie with cross-origin compatible settings
     setCookie(c, 'session', token, {
       httpOnly: true,
-      secure: c.env.ENVIRONMENT === 'production',
-      sameSite: 'Lax',
+      secure: true, // Always secure for HTTPS
+      sameSite: 'None', // Allow cross-origin cookie sending
       maxAge: 7 * 24 * 60 * 60,
+      domain: undefined, // Don't set domain to allow cross-origin
     });
 
     return c.json({ success: true, data: { user, token } });
@@ -117,12 +118,13 @@ authRoutes.post('/login', async (c) => {
       .bind(sessionId, user.id, token, expiresAt)
       .run();
 
-    // Set cookie
+    // Set cookie with cross-origin compatible settings
     setCookie(c, 'session', token, {
       httpOnly: true,
-      secure: c.env.ENVIRONMENT === 'production',
-      sameSite: 'Lax',
+      secure: true, // Always secure for HTTPS
+      sameSite: 'None', // Allow cross-origin cookie sending
       maxAge: 7 * 24 * 60 * 60,
+      domain: undefined, // Don't set domain to allow cross-origin
     });
 
     // Remove password hash from response
