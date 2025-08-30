@@ -58,15 +58,72 @@ export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldC
   }, [characters, worldState, drawWorldBackground]);
 
 
+  const imageCache = useRef<Map<string, HTMLImageElement>>(new Map());
+
+  const loadImage = useCallback((url: string): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = url;
+    });
+  }, []);
+
   const drawCharacter = (ctx: CanvasRenderingContext2D, character: Character) => {
-    const colors = character.color_palette ? JSON.parse(character.color_palette) : { primary: '#4A90E2' };
-    
-    // Character position
     const x = character.x;
     const y = character.y;
+    const baseSize = 40 + character.level * 20; // Larger size for images
+    
+    // If character has an image_url, try to draw the actual AI image
+    if (character.image_url) {
+      const cachedImage = imageCache.current.get(character.id);
+      
+      if (cachedImage) {
+        // Draw the actual AI-generated image
+        const imageSize = baseSize;
+        ctx.drawImage(
+          cachedImage,
+          x - imageSize / 2,
+          y - imageSize / 2,
+          imageSize,
+          imageSize
+        );
+        
+        // Add level indicator
+        if (character.level > 1) {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.font = '12px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText(`Lv${character.level}`, x, y + baseSize / 2 + 15);
+        }
+        
+        // Add legendary border
+        if (character.is_legendary) {
+          ctx.strokeStyle = '#FFD700';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.rect(x - imageSize / 2 - 2, y - imageSize / 2 - 2, imageSize + 4, imageSize + 4);
+          ctx.stroke();
+        }
+        
+        return;
+      } else {
+        // Try to load the image
+        loadImage(character.image_url)
+          .then(img => {
+            imageCache.current.set(character.id, img);
+          })
+          .catch(err => {
+            console.error(`Failed to load image for character ${character.id}:`, err);
+          });
+      }
+    }
+    
+    // Fallback: Draw colored dot for characters without images or while loading
+    const colors = character.color_palette ? JSON.parse(character.color_palette) : { primary: '#FFFFFF' };
     const size = 10 + character.level * 5;
 
-    // Draw character droplet
     ctx.fillStyle = colors.primary;
     ctx.beginPath();
     ctx.arc(x, y, size, 0, Math.PI * 2);

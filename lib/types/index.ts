@@ -30,6 +30,7 @@ export interface Character {
   created_at: string;
   updated_at: string;
   owner?: User;
+  image_url?: string; // For AI-generated creation images
 }
 
 export interface Water {
