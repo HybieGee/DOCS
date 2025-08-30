@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { WalletConnectButton } from './components/WalletConnectButton';
 import { WorldCanvas } from './components/WorldCanvas';
-import { CharacterCard } from './components/CharacterCard';
+import { CharacterCard } from './components/CharacterCard';\nimport { AuthModal } from './components/AuthModal';
 import { useAuth } from './hooks/useAuth';
 import { useWallet } from '@solana/wallet-adapter-react';
 import type { Character } from '@/lib/types';
@@ -20,7 +20,7 @@ export default function Home() {
     season: 'spring',
     current_phase: 'day',
   });
-  const [isMinting, setIsMinting] = useState(false);
+  const [isMinting, setIsMinting] = useState(false);\n  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     fetchWorldState();
@@ -202,6 +202,12 @@ export default function Home() {
             onClose={() => setSelectedCharacter(null)}
           />
         )}
+
+        {/* Auth Modal */}
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+        />
       </main>
     </div>
   );

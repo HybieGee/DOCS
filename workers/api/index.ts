@@ -45,7 +45,7 @@ app.get('/health', (c) => {
 // Mount routes
 app.route('/api/auth', authRoutes);
 app.route('/api/characters', characterRoutes);
-app.route('/api/lore', loreRoutes);
+app.route('/api', loreRoutes);  // Lore routes include /characters/:id/lore prefix
 app.route('/api/world', worldRoutes);
 app.route('/api/leaderboard', leaderboardRoutes);
 
