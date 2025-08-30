@@ -104,29 +104,62 @@ export default function Home() {
 
     setIsMinting(true);
     try {
-      const response = await fetch(getApiUrl('/api/characters/mint'), {
+      // Call the new creation API
+      const response = await fetch(getApiUrl('/api/creations'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        body: JSON.stringify({
+          wallet: user.solana_address,
+          level: 1 // Start with level 1
+        })
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to mint character');
+        throw new Error(error.error || 'Failed to create character');
       }
 
       const result = await response.json();
-      console.log('Mint success:', result);
+      console.log('Creation success:', result);
       
-      // Immediately refresh data for responsiveness
-      await Promise.all([
-        fetchCharacters(),
-        fetchWorldState()
-      ]);
+      if (result.success && result.data) {
+        // Create a character-like object to add to the display
+        const creationAsCharacter = {
+          id: result.data.id,
+          owner_user_id: user.id,
+          wallet_address: user.solana_address,
+          name: `Creation ${result.data.id.slice(-4)}`, // Use last 4 chars of ID
+          is_legendary: result.data.traits.level === 3,
+          x: Math.random() * 1200, // Random position
+          y: Math.random() * 200 + 400, // Random Y in lower area
+          level: result.data.level,
+          water_count: 0,
+          sprite_seed: result.data.seed,
+          color_palette: JSON.stringify({
+            primary: result.data.traits.level >= 3 ? '#FFD700' : '#FFFFFF',
+            secondary: result.data.traits.level >= 2 ? '#CCCCCC' : '#999999',
+            accent: '#FFFFFF',
+            hasColor: result.data.traits.level >= 2
+          }),
+          created_at: result.data.created_at,
+          updated_at: result.data.created_at,
+          image_url: result.data.image_url
+        };
+        
+        // Add to characters display
+        setCharacters(prev => [creationAsCharacter, ...prev]);
+        
+        // Show creation details
+        alert(`🎉 Created ${result.data.traits.form} at level ${result.data.level}!\nTraits: ${Object.entries(result.data.traits).map(([k,v]) => `${k}: ${v}`).join(', ')}`);
+      }
+      
+      // Refresh world state
+      await fetchWorldState();
       
     } catch (error) {
-      console.error('Mint error:', error);
-      alert(error instanceof Error ? error.message : 'Failed to mint character');
+      console.error('Creation error:', error);
+      alert(error instanceof Error ? error.message : 'Failed to create character');
     } finally {
       setIsMinting(false);
     }

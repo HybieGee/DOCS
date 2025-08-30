@@ -15,6 +15,10 @@ database_id = "ffdec4f8-a0ca-447c-8ad4-186eae2bf33e"
 binding = "CACHE"
 id = "aa1fb3b47d5a46b6802b6b2973f4cf28"
 
+[[kv_namespaces]]
+binding = "CREATIONS"
+id = "5df884b7d4f44a8f9fc74f955d373b54"
+
 [[r2_buckets]]
 binding = "BUCKET"
 bucket_name = "droplets-media"

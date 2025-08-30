@@ -5,6 +5,7 @@ import { cors } from 'hono/cors';
 import { setCookie, getCookie } from 'hono/cookie';
 import { authRoutes } from './routes/auth';
 import { characterRoutes } from './routes/characters';
+import { creationRoutes } from './routes/creations';
 // import { loreRoutes } from './routes/lore';
 import { worldRoutes } from './routes/world';
 // import { leaderboardRoutes } from './routes/leaderboard';
@@ -13,9 +14,11 @@ import { worldRoutes } from './routes/world';
 export interface Env {
   DB: D1Database;
   CACHE: KVNamespace;
+  CREATIONS: KVNamespace;
   BUCKET: R2Bucket;
   // WORLD: DurableObjectNamespace;
   JWT_SECRET: string;
+  STABILITY_API_KEY?: string;
   TURNSTILE_SECRET_KEY: string;
   ENVIRONMENT: string;
 }
@@ -54,6 +57,7 @@ app.get('/debug/db', async (c) => {
 // Mount routes
 app.route('/api/auth', authRoutes);
 app.route('/api/characters', characterRoutes);
+app.route('/api/creations', creationRoutes);
 // app.route('/api', loreRoutes);  // Lore routes include /characters/:id/lore prefix
 app.route('/api/world', worldRoutes);
 // app.route('/api/leaderboard', leaderboardRoutes);
