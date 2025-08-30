@@ -136,7 +136,7 @@ export default function Home() {
     <div className="fixed inset-0 bg-black overflow-hidden">
       {/* Background Video */}
       <video
-        className="absolute inset-0 w-full h-full object-cover z-0"
+        className="video-background"
         autoPlay
         muted
         loop
