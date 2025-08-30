@@ -7,6 +7,7 @@ import { CharacterCard } from './components/CharacterCard';
 import { SimpleAuthModal } from './components/SimpleAuthModal';
 import { useAuth } from './hooks/useAuth';
 import type { Character } from '@/lib/types';
+import { getApiUrl, getWebSocketUrl } from '@/lib/utils/api';
 
 export default function Home() {
   const { user } = useAuth();
@@ -29,7 +30,7 @@ export default function Home() {
 
   const fetchWorldState = async () => {
     try {
-      const response = await fetch('/api/world/state');
+      const response = await fetch(getApiUrl('/api/world/state'));
       const data = await response.json();
       if (data.success) {
         setWorldState(data.data);
@@ -41,7 +42,7 @@ export default function Home() {
 
   const fetchCharacters = async () => {
     try {
-      const response = await fetch('/api/characters');
+      const response = await fetch(getApiUrl('/api/characters'));
       const data = await response.json();
       if (data.success) {
         setCharacters(data.data);
@@ -52,11 +53,7 @@ export default function Home() {
   };
 
   const connectToRealtime = () => {
-    const ws = new WebSocket(
-      process.env.NODE_ENV === 'production'
-        ? 'wss://api.dropletsofcreation.com/api/realtime'
-        : 'ws://localhost:8787/api/realtime'
-    );
+    const ws = new WebSocket(getWebSocketUrl('/api/realtime'));
 
     ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
@@ -96,7 +93,7 @@ export default function Home() {
 
     setIsMinting(true);
     try {
-      const response = await fetch('/api/characters/mint', {
+      const response = await fetch(getApiUrl('/api/characters/mint'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

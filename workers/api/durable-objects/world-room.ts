@@ -1,4 +1,8 @@
-import type { RealtimeMessage } from '@/lib/types';
+interface RealtimeMessage {
+  type: 'character_spawn' | 'water' | 'level_up' | 'lore_canon' | 'milestone' | 'season_change';
+  payload: Record<string, unknown>;
+  timestamp?: string;
+}
 
 export class WorldRoom {
   state: DurableObjectState;

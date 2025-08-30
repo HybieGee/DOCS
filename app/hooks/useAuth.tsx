@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getCookie, setCookie, deleteCookie } from 'cookies-next';
 import type { User, SignupRequest, LoginRequest } from '@/lib/types';
+import { getApiUrl } from '@/lib/utils/api';
 
 interface AuthContextType {
   user: User | null;
@@ -31,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const response = await fetch('/api/auth/me', {
+      const response = await fetch(getApiUrl('/api/auth/me'), {
         headers: {
           'Cookie': `session=${token}`,
         },
@@ -49,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (data: LoginRequest) => {
-    const response = await fetch('/api/auth/login', {
+    const response = await fetch(getApiUrl('/api/auth/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -71,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signup = async (data: SignupRequest) => {
-    const response = await fetch('/api/auth/signup', {
+    const response = await fetch(getApiUrl('/api/auth/signup'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -93,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await fetch('/api/auth/logout', {
+    await fetch(getApiUrl('/api/auth/logout'), {
       method: 'POST',
       credentials: 'include',
     });
@@ -102,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const verifyWallet = async (data: { signed_message: string; signature: string }) => {
-    const response = await fetch('/api/auth/wallet/verify', {
+    const response = await fetch(getApiUrl('/api/auth/wallet/verify'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),

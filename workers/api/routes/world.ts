@@ -1,22 +1,37 @@
 import { Hono } from 'hono';
 import type { Env } from '../index';
-import type { WorldState } from '@/lib/types';
+
+interface WorldState {
+  id: number;
+  total_characters: number;
+  total_waters: number;
+  season: 'spring' | 'summer' | 'autumn' | 'winter';
+  last_milestone_reached: number;
+  current_phase: 'dawn' | 'day' | 'dusk' | 'night';
+  updated_at: string;
+}
 
 export const worldRoutes = new Hono<{ Bindings: Env }>();
 
 // Get world state
 worldRoutes.get('/state', async (c) => {
   try {
+    console.log('Getting world state...');
+    
     // Try to get from cache first
     const cached = await c.env.CACHE.get('world_state');
     if (cached) {
+      console.log('Found cached world state');
       return c.json({ success: true, data: JSON.parse(cached) });
     }
 
+    console.log('Cache miss, querying database...');
     // Get from database
     const worldState = await c.env.DB.prepare(
       'SELECT * FROM world_state WHERE id = 1'
     ).first<WorldState>();
+    
+    console.log('Database query result:', worldState);
 
     if (!worldState) {
       // Initialize if not exists
@@ -36,17 +51,17 @@ worldRoutes.get('/state', async (c) => {
         updated_at: new Date().toISOString(),
       };
 
-      // Cache for 30 seconds
-      await c.env.CACHE.put('world_state', JSON.stringify(defaultState), { expirationTtl: 30 });
+      // Cache for 60 seconds
+      await c.env.CACHE.put('world_state', JSON.stringify(defaultState), { expirationTtl: 60 });
       return c.json({ success: true, data: defaultState });
     }
 
-    // Cache for 30 seconds
-    await c.env.CACHE.put('world_state', JSON.stringify(worldState), { expirationTtl: 30 });
+    // Cache for 60 seconds
+    await c.env.CACHE.put('world_state', JSON.stringify(worldState), { expirationTtl: 60 });
     return c.json({ success: true, data: worldState });
   } catch (error) {
     console.error('World state error:', error);
-    return c.json({ success: false, error: 'Failed to get world state' }, 500);
+    return c.json({ success: false, error: 'Failed to get world state', details: error.message }, 500);
   }
 });
 

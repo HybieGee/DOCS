@@ -8,6 +8,7 @@ import { WalletConnectButton } from '@/app/components/WalletConnectButton';
 import Link from 'next/link';
 import type { Character } from '@/lib/types';
 import { shortenAddress } from '@/lib/utils/solana';
+import { getApiUrl } from '@/lib/utils/api';
 
 interface UserStats {
   user: {
@@ -49,7 +50,7 @@ export default function ProfilePage() {
 
     setLoadingStats(true);
     try {
-      const response = await fetch(`/api/leaderboard/user/${publicKey.toBase58()}`);
+      const response = await fetch(getApiUrl(`/api/leaderboard/user/${publicKey.toBase58()}`));
       const data = await response.json();
       if (data.success) {
         setUserStats(data.data);
@@ -63,7 +64,7 @@ export default function ProfilePage() {
 
   const fetchOwnedCharacters = async () => {
     try {
-      const response = await fetch(`/api/characters?owner=${user?.id}`);
+      const response = await fetch(getApiUrl(`/api/characters?owner=${user?.id}`));
       const data = await response.json();
       if (data.success) {
         setOwnedCharacters(data.data);
