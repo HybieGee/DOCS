@@ -52,17 +52,16 @@ export async function verifyJWT(
   }
 }
 
-export function hashPassword(password: string): string {
+export async function hashPassword(password: string): Promise<string> {
   // Note: In production, use proper hashing with argon2 or bcrypt
   // For now, using a simple hash for development
   const crypto = globalThis.crypto;
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
-  return crypto.subtle.digest('SHA-256', data).then((hash) => {
-    return Array.from(new Uint8Array(hash))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
-  });
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 export async function verifyPassword(
