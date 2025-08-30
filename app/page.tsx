@@ -234,16 +234,31 @@ export default function Home() {
 
 // Rain Animation Component
 function RainAnimation() {
+  const [dimensions, setDimensions] = useState({ width: 1200, height: 800 });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setDimensions({ width: window.innerWidth, height: window.innerHeight });
+      
+      const handleResize = () => {
+        setDimensions({ width: window.innerWidth, height: window.innerHeight });
+      };
+      
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
+
   return (
     <div className="rain-container">
       {Array.from({ length: 50 }).map((_, i) => (
         <motion.div
           key={i}
           className="raindrop"
-          initial={{ y: -100, x: Math.random() * window.innerWidth }}
+          initial={{ y: -100, x: Math.random() * dimensions.width }}
           animate={{
-            y: window.innerHeight + 100,
-            x: Math.random() * window.innerWidth,
+            y: dimensions.height + 100,
+            x: Math.random() * dimensions.width,
           }}
           transition={{
             duration: Math.random() * 2 + 1,
