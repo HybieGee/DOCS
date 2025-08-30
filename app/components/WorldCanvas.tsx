@@ -28,45 +28,9 @@ export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldC
   }, []);
 
   const drawWorldBackground = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, state: { total_characters: number }) => {
-    // Draw ground
-    const gradient = ctx.createLinearGradient(0, canvas.height - 200, 0, canvas.height);
-    gradient.addColorStop(0, 'rgba(34, 139, 34, 0.3)');
-    gradient.addColorStop(1, 'rgba(34, 139, 34, 0.6)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, canvas.height - 200, canvas.width, 200);
-
-    // Draw milestone-based elements
-    if (state.total_characters >= 100) {
-      // Draw streams
-      ctx.strokeStyle = 'rgba(100, 200, 255, 0.5)';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(100, canvas.height - 150);
-      ctx.quadraticCurveTo(200, canvas.height - 170, 300, canvas.height - 150);
-      ctx.stroke();
-    }
-
-    if (state.total_characters >= 500) {
-      // Draw plants
-      for (let i = 0; i < 10; i++) {
-        const x = (canvas.width / 10) * i + 50;
-        const y = canvas.height - 180;
-        drawPlant(ctx, x, y);
-      }
-    }
-
-    if (state.total_characters >= 1000) {
-      // Draw town lights
-      for (let i = 0; i < 5; i++) {
-        const x = (canvas.width / 5) * i + 100;
-        const y = canvas.height - 300;
-        ctx.fillStyle = 'rgba(255, 255, 100, 0.8)';
-        ctx.beginPath();
-        ctx.arc(x, y, 5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-  }, [drawPlant]);
+    // No background drawing - let the video background show through
+    // Characters will float freely in the space
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -161,16 +125,9 @@ export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldC
     <div className="relative w-full h-full">
       <canvas
         ref={canvasRef}
-        className="w-full h-full cursor-pointer"
+        className="w-full h-full cursor-pointer bg-transparent"
         onClick={handleCanvasClick}
       />
-      
-      {/* Season/Time Overlay */}
-      <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm rounded-lg px-4 py-2">
-        <div className="text-white text-sm">
-          <span className="capitalize">{worldState.season}</span> • <span className="capitalize">{worldState.current_phase}</span>
-        </div>
-      </div>
     </div>
   );
 }

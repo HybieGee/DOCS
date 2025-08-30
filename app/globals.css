@@ -117,9 +117,9 @@ body {
 
 .top-right-buttons {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
 }
 
 /* Bottom UI Bar */
