@@ -10,11 +10,12 @@ export function WalletConnectButton() {
   const { user, verifyWallet } = useAuth();
   const [isVerifying, setIsVerifying] = useState(false);
 
-  useEffect(() => {
-    if (connected && publicKey && user && !user.wallet_verified) {
-      handleVerifyWallet();
-    }
-  }, [connected, publicKey, user]);
+  // Simplified auth - no automatic wallet verification needed
+  // useEffect(() => {
+  //   if (connected && publicKey && user && !user.wallet_verified) {
+  //     handleVerifyWallet();
+  //   }
+  // }, [connected, publicKey, user]);
 
   const handleVerifyWallet = async () => {
     if (!publicKey || !signMessage || isVerifying) return;

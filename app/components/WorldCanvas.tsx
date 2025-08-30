@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import type { Character } from '@/lib/types';
 
 interface WorldCanvasProps {
@@ -17,42 +17,17 @@ export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldC
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const drawPlant = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number) => {
+    ctx.fillStyle = 'rgba(34, 139, 34, 0.8)';
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - 5, y - 20);
+    ctx.lineTo(x + 5, y - 20);
+    ctx.closePath();
+    ctx.fill();
+  }, []);
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Set canvas size
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-
-    const animate = () => {
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw world background elements based on milestones
-      drawWorldBackground(ctx, canvas, worldState);
-
-      // Draw characters
-      characters.forEach((character) => {
-        drawCharacter(ctx, character);
-      });
-
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [characters, worldState]);
-
-  const drawWorldBackground = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, state: { total_characters: number }) => {
+  const drawWorldBackground = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, state: { total_characters: number }) => {
     // Draw ground
     const gradient = ctx.createLinearGradient(0, canvas.height - 200, 0, canvas.height);
     gradient.addColorStop(0, 'rgba(34, 139, 34, 0.3)');
@@ -91,7 +66,43 @@ export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldC
         ctx.fill();
       }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Set canvas size
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    const animate = () => {
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw world background elements based on milestones
+      drawWorldBackground(ctx, canvas, worldState);
+
+      // Draw characters
+      characters.forEach((character) => {
+        drawCharacter(ctx, character);
+      });
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [characters, worldState, drawWorldBackground]);
+
 
   const drawCharacter = (ctx: CanvasRenderingContext2D, character: Character) => {
     const colors = character.color_palette ? JSON.parse(character.color_palette) : { primary: '#4A90E2' };
@@ -125,15 +136,6 @@ export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldC
     }
   };
 
-  const drawPlant = (ctx: CanvasRenderingContext2D, x: number, y: number) => {
-    ctx.fillStyle = 'rgba(34, 139, 34, 0.8)';
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x - 5, y - 20);
-    ctx.lineTo(x + 5, y - 20);
-    ctx.closePath();
-    ctx.fill();
-  };
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { WorldCanvas } from './components/WorldCanvas';
 import { CharacterCard } from './components/CharacterCard';
@@ -22,13 +22,7 @@ export default function Home() {
   const [isMinting, setIsMinting] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  useEffect(() => {
-    fetchWorldState();
-    fetchCharacters();
-    connectToRealtime();
-  }, []);
-
-  const fetchWorldState = async () => {
+  const fetchWorldState = useCallback(async () => {
     try {
       const response = await fetch(getApiUrl('/api/world/state'));
       const data = await response.json();
@@ -38,9 +32,9 @@ export default function Home() {
     } catch (error) {
       console.error('Failed to fetch world state:', error);
     }
-  };
+  }, []);
 
-  const fetchCharacters = async () => {
+  const fetchCharacters = useCallback(async () => {
     try {
       const response = await fetch(getApiUrl('/api/characters'));
       const data = await response.json();
@@ -50,24 +44,9 @@ export default function Home() {
     } catch (error) {
       console.error('Failed to fetch characters:', error);
     }
-  };
+  }, []);
 
-  const connectToRealtime = () => {
-    const ws = new WebSocket(getWebSocketUrl('/api/realtime'));
-
-    ws.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      handleRealtimeMessage(message);
-    };
-
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-
-    return () => ws.close();
-  };
-
-  const handleRealtimeMessage = (message: { type: string; payload: Record<string, unknown> }) => {
+  const handleRealtimeMessage = useCallback((message: { type: string; payload: Record<string, unknown> }) => {
     switch (message.type) {
       case 'character_spawn':
         setCharacters((prev) => [message.payload, ...prev]);
@@ -86,7 +65,29 @@ export default function Home() {
         setWorldState((prev) => ({ ...prev, ...message.payload }));
         break;
     }
-  };
+  }, []);
+
+  const connectToRealtime = useCallback(() => {
+    const ws = new WebSocket(getWebSocketUrl('/api/realtime'));
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      handleRealtimeMessage(message);
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    return () => ws.close();
+  }, [handleRealtimeMessage]);
+
+  useEffect(() => {
+    fetchWorldState();
+    fetchCharacters();
+    connectToRealtime();
+  }, [fetchWorldState, fetchCharacters, connectToRealtime]);
+
 
   const handleMint = async () => {
     if (!user || isMinting) return;

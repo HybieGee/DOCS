@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/app/hooks/useAuth';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -38,14 +38,7 @@ export default function ProfilePage() {
   const [ownedCharacters, setOwnedCharacters] = useState<Character[]>([]);
   const [loadingStats, setLoadingStats] = useState(false);
 
-  useEffect(() => {
-    if (user && connected && publicKey) {
-      fetchUserStats();
-      fetchOwnedCharacters();
-    }
-  }, [user, connected, publicKey]);
-
-  const fetchUserStats = async () => {
+  const fetchUserStats = useCallback(async () => {
     if (!publicKey) return;
 
     setLoadingStats(true);
@@ -60,9 +53,9 @@ export default function ProfilePage() {
     } finally {
       setLoadingStats(false);
     }
-  };
+  }, [publicKey]);
 
-  const fetchOwnedCharacters = async () => {
+  const fetchOwnedCharacters = useCallback(async () => {
     try {
       const response = await fetch(getApiUrl(`/api/characters?owner=${user?.id}`));
       const data = await response.json();
@@ -72,7 +65,14 @@ export default function ProfilePage() {
     } catch (error) {
       console.error('Failed to fetch owned characters:', error);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user && connected && publicKey) {
+      fetchUserStats();
+      fetchOwnedCharacters();
+    }
+  }, [user, connected, publicKey, fetchUserStats, fetchOwnedCharacters]);
 
   if (loading) {
     return (
