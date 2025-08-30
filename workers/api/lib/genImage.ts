@@ -19,7 +19,7 @@ export function deriveTraits(seed: string, level: 1 | 2 | 3): Record<string, any
   const hash = Array.from(seed).reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) | 0, 0);
   const rng = (offset: number) => Math.abs(hash + offset) % 100;
 
-  const baseTraits = {
+  const baseTraits: Record<string, any> = {
     type: "water",
     level,
     form: level === 1 ? "droplet" : level === 2 ? "stream" : "wave",
@@ -29,14 +29,14 @@ export function deriveTraits(seed: string, level: 1 | 2 | 3): Record<string, any
 
   // Add level-specific traits
   if (level >= 2) {
-    baseTraits["fins"] = ["small", "curved", "splash"][rng(3) % 3];
-    baseTraits["crest"] = rng(4) % 2 === 0 ? "small" : "none";
+    baseTraits.fins = ["small", "curved", "splash"][rng(3) % 3];
+    baseTraits.crest = rng(4) % 2 === 0 ? "small" : "none";
   }
 
   if (level >= 3) {
-    baseTraits["crest"] = ["pronounced", "flowing", "heroic"][rng(5) % 3];
-    baseTraits["foam"] = rng(6) % 2 === 0 ? "hatched" : "streaked";
-    baseTraits["posture"] = ["heroic", "dynamic", "majestic"][rng(7) % 3];
+    baseTraits.crest = ["pronounced", "flowing", "heroic"][rng(5) % 3];
+    baseTraits.foam = rng(6) % 2 === 0 ? "hatched" : "streaked";
+    baseTraits.posture = ["heroic", "dynamic", "majestic"][rng(7) % 3];
   }
 
   return baseTraits;

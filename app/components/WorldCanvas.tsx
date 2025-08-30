@@ -17,17 +17,7 @@ export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldC
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
 
-  const drawPlant = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number) => {
-    ctx.fillStyle = 'rgba(34, 139, 34, 0.8)';
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x - 5, y - 20);
-    ctx.lineTo(x + 5, y - 20);
-    ctx.closePath();
-    ctx.fill();
-  }, []);
-
-  const drawWorldBackground = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, state: { total_characters: number }) => {
+  const drawWorldBackground = useCallback(() => {
     // No background drawing - let the video background show through
     // Characters will float freely in the space
   }, []);
@@ -48,7 +38,7 @@ export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldC
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Draw world background elements based on milestones
-      drawWorldBackground(ctx, canvas, worldState);
+      drawWorldBackground();
 
       // Draw characters
       characters.forEach((character) => {
