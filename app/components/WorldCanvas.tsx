@@ -15,7 +15,7 @@ interface WorldCanvasProps {
 
 export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | null>(null);
 
   const drawPlant = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number) => {
     ctx.fillStyle = 'rgba(34, 139, 34, 0.8)';
