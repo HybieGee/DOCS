@@ -66,7 +66,7 @@ export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldC
         ctx.fill();
       }
     }
-  }, []);
+  }, [drawPlant]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

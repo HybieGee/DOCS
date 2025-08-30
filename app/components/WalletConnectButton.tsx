@@ -2,7 +2,7 @@
 
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/app/hooks/useAuth';
 
 export function WalletConnectButton() {
@@ -40,15 +40,7 @@ export function WalletConnectButton() {
   return (
     <div className="flex items-center gap-4">
       <WalletMultiButton className="!bg-gradient-to-r !from-purple-600 !to-blue-600 hover:!from-purple-700 hover:!to-blue-700 !transition-all" />
-      {connected && publicKey && user && !user.wallet_verified && (
-        <button
-          onClick={handleVerifyWallet}
-          disabled={isVerifying}
-          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
-        >
-          {isVerifying ? 'Verifying...' : 'Verify Wallet'}
-        </button>
-      )}
+      {/* Wallet verification removed for simplified auth */}
     </div>
   );
 }
