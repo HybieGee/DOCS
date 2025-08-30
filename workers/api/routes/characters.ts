@@ -224,7 +224,7 @@ characterRoutes.get('/', async (c) => {
       ORDER BY c.created_at DESC
       LIMIT ?
     `;
-    const params = [limit];
+    const params: (string | number)[] = [limit];
 
     if (cursor) {
       query = `
