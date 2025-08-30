@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
 import { WorldCanvas } from './components/WorldCanvas';
 import { CharacterCard } from './components/CharacterCard';
 import { SimpleAuthModal } from './components/SimpleAuthModal';
