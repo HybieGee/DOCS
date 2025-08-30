@@ -99,7 +99,7 @@ leaderboardRoutes.get('/', async (c) => {
 // Get user stats
 leaderboardRoutes.get('/user/:address', async (c) => {
   try {
-    const address = c.param('address');
+    const address = (c as any).param('address');
     const cacheKey = `user_stats_${address}`;
 
     // Try cache first

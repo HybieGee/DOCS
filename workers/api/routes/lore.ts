@@ -27,7 +27,7 @@ const requireAuth = async (c: any, next: any) => {
 loreRoutes.post('/characters/:characterId/lore', requireAuth, async (c) => {
   try {
     const userId = c.get('userId' as never) as string;
-    const characterId = c.param('characterId');
+    const characterId = (c as any).param('characterId');
     const body = await c.req.json<{ body: string; turnstile_token?: string }>();
 
     // Validate lore length
@@ -99,7 +99,7 @@ loreRoutes.post('/characters/:characterId/lore', requireAuth, async (c) => {
 loreRoutes.post('/:loreId/vote', requireAuth, async (c) => {
   try {
     const userId = c.get('userId' as never) as string;
-    const loreId = c.param('loreId');
+    const loreId = (c as any).param('loreId');
 
     // Check if lore exists
     const lore = await c.env.DB.prepare(
@@ -198,7 +198,7 @@ loreRoutes.post('/:loreId/vote', requireAuth, async (c) => {
 // Get lore for a character
 loreRoutes.get('/characters/:characterId/lore', async (c) => {
   try {
-    const characterId = c.param('characterId');
+    const characterId = (c as any).param('characterId');
     const limit = Math.min(parseInt(c.req.query('limit') || '20'), 50);
 
     const loreEntries = await c.env.DB.prepare(

@@ -116,7 +116,7 @@ characterRoutes.post('/mint', requireAuth, async (c) => {
 characterRoutes.post('/:id/water', requireAuth, async (c) => {
   try {
     const userId = c.get('userId' as never) as string;
-    const characterId = c.param('id');
+    const characterId = (c as any).param('id');
 
     // Check if character exists
     const character = await c.env.DB.prepare(
