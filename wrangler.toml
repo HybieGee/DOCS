@@ -1,0 +1,30 @@
+name = "droplets-api"
+main = "workers/api/index.ts"
+compatibility_date = "2024-08-30"
+node_compat = true
+
+[env.production]
+name = "droplets-api-production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "droplets-db"
+database_id = "YOUR_DATABASE_ID"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "YOUR_KV_ID"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "droplets-media"
+
+[[durable_objects.bindings]]
+name = "WORLD"
+class_name = "WorldRoom"
+script_name = "droplets-api"
+
+[vars]
+JWT_SECRET = "YOUR_JWT_SECRET"
+TURNSTILE_SECRET_KEY = "YOUR_TURNSTILE_SECRET"
+ENVIRONMENT = "development"
