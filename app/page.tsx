@@ -2,16 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { WalletConnectButton } from './components/WalletConnectButton';
 import { WorldCanvas } from './components/WorldCanvas';
-import { CharacterCard } from './components/CharacterCard';\nimport { AuthModal } from './components/AuthModal';
+import { CharacterCard } from './components/CharacterCard';
+import { SimpleAuthModal } from './components/SimpleAuthModal';
 import { useAuth } from './hooks/useAuth';
-import { useWallet } from '@solana/wallet-adapter-react';
 import type { Character } from '@/lib/types';
 
 export default function Home() {
   const { user, loading } = useAuth();
-  const { connected } = useWallet();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [worldState, setWorldState] = useState({
@@ -93,7 +91,7 @@ export default function Home() {
   };
 
   const handleMint = async () => {
-    if (!user || !connected || isMinting) return;
+    if (!user || isMinting) return;
 
     setIsMinting(true);
     try {
@@ -147,7 +145,24 @@ export default function Home() {
               </div>
             </div>
             
-            <WalletConnectButton />
+{user ? (
+              <div className="flex items-center gap-4">
+                <span className="text-white">Welcome, {user.username}!</span>
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="text-white/80 hover:text-white transition-colors"
+                >
+                  Account
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all"
+              >
+                Login / Sign Up
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -169,7 +184,7 @@ export default function Home() {
               Mint your droplet, water characters to help them evolve, and shape the narrative of our living world.
             </p>
             
-            {user && connected ? (
+            {user ? (
               <button
                 onClick={handleMint}
                 disabled={isMinting}
@@ -179,8 +194,13 @@ export default function Home() {
               </button>
             ) : (
               <div className="space-y-4">
-                <p className="text-white/60">Connect your wallet to start minting</p>
-                <WalletConnectButton />
+                <p className="text-white/60">Create an account to start minting</p>
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold rounded-full text-lg transition-all transform hover:scale-105"
+                >
+                  Create Account / Login
+                </button>
               </div>
             )}
           </motion.div>
@@ -204,7 +224,7 @@ export default function Home() {
         )}
 
         {/* Auth Modal */}
-        <AuthModal
+        <SimpleAuthModal
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
         />

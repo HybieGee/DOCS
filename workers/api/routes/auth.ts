@@ -19,10 +19,12 @@ authRoutes.post('/signup', async (c) => {
       return c.json({ success: false, error: 'Invalid captcha' }, 400);
     }
 
-    // Verify Solana signature
-    const signatureValid = await verifySignature(solana_address, signed_message, signature);
-    if (!signatureValid) {
-      return c.json({ success: false, error: 'Invalid signature' }, 400);
+    // For simplified auth, skip signature verification if it's the mock signature
+    if (signature !== 'simplified_signup_no_wallet_required') {
+      const signatureValid = await verifySignature(solana_address, signed_message, signature);
+      if (!signatureValid) {
+        return c.json({ success: false, error: 'Invalid signature' }, 400);
+      }
     }
 
     // Check if user exists
