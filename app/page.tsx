@@ -20,6 +20,7 @@ export default function Home() {
   });
   const [isMinting, setIsMinting] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [canCreateToday, setCanCreateToday] = useState(true);
 
   const fetchWorldState = useCallback(async () => {
     try {
@@ -97,6 +98,28 @@ export default function Home() {
     connectToRealtime();
   }, [fetchWorldState, fetchCharacters, connectToRealtime]);
 
+  const checkCanCreateToday = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(getApiUrl('/api/creations/can-create'), {
+        credentials: 'include'
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setCanCreateToday(data.data.can_create);
+      }
+    } catch (error) {
+      console.error('Failed to check creation status:', error);
+    }
+  }, [user]);
+
+  // Check creation status when user changes
+  useEffect(() => {
+    checkCanCreateToday();
+  }, [checkCanCreateToday]);
+
 
   const handleMint = async () => {
     if (!user || isMinting) return;
@@ -156,6 +179,9 @@ export default function Home() {
       // Refresh world state and characters immediately
       await fetchWorldState();
       await fetchCharacters();
+      
+      // Update creation status
+      await checkCanCreateToday();
       
     } catch (error) {
       console.error('Creation error:', error);
@@ -220,23 +246,32 @@ export default function Home() {
         {/* Top Center - Mint Button */}
         <div className="top-center-button">
           {user ? (
-            <button
-              onClick={handleMint}
-              disabled={isMinting}
-              className="minimal-button px-6 py-3 text-base font-medium"
-            >
-              {isMinting ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 loading-spinner" />
-                  <span>Minting...</span>
-                </div>
+            <>
+              {canCreateToday ? (
+                <button
+                  onClick={handleMint}
+                  disabled={isMinting}
+                  className="minimal-button px-6 py-3 text-base font-medium"
+                >
+                  {isMinting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 loading-spinner" />
+                      <span>Minting...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span>💧</span>
+                      <span>Mint Today's Droplet</span>
+                    </div>
+                  )}
+                </button>
               ) : (
-                <div className="flex items-center gap-2">
-                  <span>💧</span>
-                  <span>Mint Droplet</span>
+                <div className="text-white/60 text-sm text-center">
+                  <div>✅ Today's droplet created!</div>
+                  <div className="text-xs text-white/40 mt-1">Come back tomorrow for another</div>
                 </div>
               )}
-            </button>
+            </>
           ) : (
             <div className="text-white/50 text-sm">Login to mint</div>
           )}

@@ -8,21 +8,23 @@ import { ensureBlackAndWhite, validateImageFormat } from '../lib/postprocess';
 
 export const creationRoutes = new Hono<{ Bindings: Env }>();
 
-// Rate limiting helper - more permissive for high load
-async function checkRateLimit(c: any, key: string): Promise<boolean> {
-  const current = await c.env.CACHE.get(key);
-  if (current) {
-    const count = parseInt(current);
-    if (count >= 3) { // Allow 3 creations per minute
-      return false; // Rate limited
-    }
-    // Increment count
-    await c.env.CACHE.put(key, (count + 1).toString(), { expirationTtl: 60 });
-    return true;
+// Rate limiting helper - 1 creation per day per account
+async function checkDailyRateLimit(c: any, userId: string): Promise<boolean> {
+  const today = new Date().toISOString().split('T')[0];
+  const rateLimitKey = `daily_creation_limit:${userId}:${today}`;
+  
+  const hasCreatedToday = await c.env.CACHE.get(rateLimitKey);
+  if (hasCreatedToday) {
+    return false; // Already created today
   }
   
-  // First creation in this minute
-  await c.env.CACHE.put(key, '1', { expirationTtl: 60 });
+  // Mark as created for today (expires at end of day)
+  const now = new Date();
+  const endOfDay = new Date(now);
+  endOfDay.setHours(23, 59, 59, 999);
+  const secondsUntilEndOfDay = Math.floor((endOfDay.getTime() - now.getTime()) / 1000);
+  
+  await c.env.CACHE.put(rateLimitKey, '1', { expirationTtl: secondsUntilEndOfDay });
   return true;
 }
 
@@ -64,13 +66,14 @@ creationRoutes.post('/', async (c) => {
       console.log('No valid auth, proceeding without user ID');
     }
 
-    // Rate limiting
-    const clientIP = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
-    const rateLimitKey = `rate_limit:creation:${wallet || userId || clientIP}`;
+    // Daily rate limiting per account
+    if (!userId) {
+      return c.json({ success: false, error: 'Must be logged in to create. Please log in first.' }, 401);
+    }
     
-    const canCreate = await checkRateLimit(c, rateLimitKey);
+    const canCreate = await checkDailyRateLimit(c, userId);
     if (!canCreate) {
-      return c.json({ success: false, error: 'Rate limit exceeded. Maximum 3 creations per minute.' }, 429);
+      return c.json({ success: false, error: 'Daily creation limit reached. You can create 1 droplet per day.' }, 429);
     }
 
     // Validate level
@@ -306,5 +309,46 @@ creationRoutes.get('/:id/image', async (c) => {
   } catch (error) {
     console.error('Serve image error:', error);
     return new Response('Internal Server Error', { status: 500 });
+  }
+});
+
+// GET /api/creations/can-create - Check if user can create today
+creationRoutes.get('/can-create', async (c) => {
+  try {
+    // Get user info if authenticated
+    let userId: string | null = null;
+    try {
+      const token = getCookie(c, 'session');
+      if (token) {
+        const payload = await verifyJWT(token, c.env.JWT_SECRET);
+        if (payload) {
+          userId = payload.sub;
+        }
+      }
+    } catch (error) {
+      return c.json({ success: false, error: 'Not authenticated' }, 401);
+    }
+
+    if (!userId) {
+      return c.json({ success: false, error: 'Must be logged in' }, 401);
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const rateLimitKey = `daily_creation_limit:${userId}:${today}`;
+    
+    const hasCreatedToday = await c.env.CACHE.get(rateLimitKey);
+    const canCreate = !hasCreatedToday;
+
+    return c.json({ 
+      success: true, 
+      data: { 
+        can_create: canCreate,
+        already_created_today: !!hasCreatedToday,
+        date: today
+      } 
+    });
+  } catch (error) {
+    console.error('Can create check error:', error);
+    return c.json({ success: false, error: 'Failed to check creation status' }, 500);
   }
 });
