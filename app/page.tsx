@@ -261,13 +261,13 @@ export default function Home() {
                   ) : (
                     <div className="flex items-center gap-2">
                       <span>💧</span>
-                      <span>Mint Today's Droplet</span>
+                      <span>Mint Today&apos;s Droplet</span>
                     </div>
                   )}
                 </button>
               ) : (
                 <div className="text-white/60 text-sm text-center">
-                  <div>✅ Today's droplet created!</div>
+                  <div>✅ Today&apos;s droplet created!</div>
                   <div className="text-xs text-white/40 mt-1">Come back tomorrow for another</div>
                 </div>
               )}
