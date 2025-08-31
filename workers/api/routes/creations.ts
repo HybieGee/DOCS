@@ -158,17 +158,15 @@ creationRoutes.post('/', async (c) => {
     let worldStateUpdated = false;
     for (let i = 0; i < 3; i++) {
       try {
-        const result = await c.env.DB.prepare(
+        await c.env.DB.prepare(
           `UPDATE world_state SET 
            total_characters = total_characters + 1, 
            updated_at = CURRENT_TIMESTAMP 
            WHERE id = 1`
         ).run();
         
-        if (result.changes > 0) {
-          worldStateUpdated = true;
-          break;
-        }
+        worldStateUpdated = true;
+        break;
       } catch (error) {
         console.error(`World state update attempt ${i + 1} failed:`, error);
         if (i === 2) {
