@@ -44,15 +44,30 @@ loreRoutes.post('/characters/:characterId/lore', requireAuth, async (c) => {
       }
     }
 
-    // Check if character exists
-    const character = await c.env.DB.prepare(
-      'SELECT id FROM characters WHERE id = ?'
+    // Check if character/creation exists and get owner info
+    let character = await c.env.DB.prepare(
+      'SELECT id, owner_user_id FROM characters WHERE id = ?'
     )
       .bind(characterId)
-      .first();
+      .first<{id: string, owner_user_id: string}>();
 
+    // If not found in characters table, check creations KV
     if (!character) {
-      return c.json({ success: false, error: 'Character not found' }, 404);
+      const creationRecord = await c.env.CREATIONS.get(characterId);
+      if (!creationRecord) {
+        return c.json({ success: false, error: 'Character/Creation not found' }, 404);
+      }
+      
+      const creation = JSON.parse(creationRecord);
+      character = {
+        id: creation.id,
+        owner_user_id: creation.user_id
+      };
+    }
+
+    // Check if user is the creator/developer of this character/creation
+    if (character.owner_user_id !== userId) {
+      return c.json({ success: false, error: 'Only the creator can edit lore for their creation' }, 403);
     }
 
     // Check rate limit (max 5 lore submissions per day)
@@ -95,7 +110,97 @@ loreRoutes.post('/characters/:characterId/lore', requireAuth, async (c) => {
   }
 });
 
-// Vote on lore
+// Edit existing lore (developer only)
+loreRoutes.put('/:loreId', requireAuth, async (c) => {
+  try {
+    const userId = c.get('userId' as never) as string;
+    const loreId = (c as any).param('loreId');
+    const body = await c.req.json<{ body: string }>();
+
+    // Validate lore length
+    if (!body.body || body.body.length > MAX_LORE_LENGTH) {
+      return c.json({ success: false, error: 'Invalid lore length' }, 400);
+    }
+
+    // Get existing lore and check ownership
+    const lore = await c.env.DB.prepare(
+      'SELECT * FROM lore WHERE id = ?'
+    )
+      .bind(loreId)
+      .first<Lore>();
+
+    if (!lore) {
+      return c.json({ success: false, error: 'Lore not found' }, 404);
+    }
+
+    // Check if user is the author (creator)
+    if (lore.author_user_id !== userId) {
+      return c.json({ success: false, error: 'Only the creator can edit their lore' }, 403);
+    }
+
+    // Update the lore
+    await c.env.DB.prepare(
+      'UPDATE lore SET body = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+    )
+      .bind(body.body, loreId)
+      .run();
+
+    const updatedLore = {
+      ...lore,
+      body: body.body,
+      updated_at: new Date().toISOString()
+    };
+
+    return c.json({ success: true, data: updatedLore });
+  } catch (error) {
+    console.error('Lore edit error:', error);
+    return c.json({ success: false, error: 'Failed to edit lore' }, 500);
+  }
+});
+
+// Delete lore (developer only)
+loreRoutes.delete('/:loreId', requireAuth, async (c) => {
+  try {
+    const userId = c.get('userId' as never) as string;
+    const loreId = (c as any).param('loreId');
+
+    // Get existing lore and check ownership
+    const lore = await c.env.DB.prepare(
+      'SELECT * FROM lore WHERE id = ?'
+    )
+      .bind(loreId)
+      .first<Lore>();
+
+    if (!lore) {
+      return c.json({ success: false, error: 'Lore not found' }, 404);
+    }
+
+    // Check if user is the author (creator)
+    if (lore.author_user_id !== userId) {
+      return c.json({ success: false, error: 'Only the creator can delete their lore' }, 403);
+    }
+
+    // Delete the lore and associated votes
+    await c.env.DB.prepare(
+      'DELETE FROM lore_votes WHERE lore_id = ?'
+    )
+      .bind(loreId)
+      .run();
+
+    await c.env.DB.prepare(
+      'DELETE FROM lore WHERE id = ?'
+    )
+      .bind(loreId)
+      .run();
+
+    return c.json({ success: true, message: 'Lore deleted successfully' });
+  } catch (error) {
+    console.error('Lore delete error:', error);
+    return c.json({ success: false, error: 'Failed to delete lore' }, 500);
+  }
+});
+
+// Vote on lore  
 loreRoutes.post('/:loreId/vote', requireAuth, async (c) => {
   try {
     const userId = c.get('userId' as never) as string;
@@ -112,7 +217,7 @@ loreRoutes.post('/:loreId/vote', requireAuth, async (c) => {
       return c.json({ success: false, error: 'Lore not found' }, 404);
     }
 
-    // Check if already voted
+    // Check if already voted on this specific lore
     const existingVote = await c.env.DB.prepare(
       'SELECT id FROM lore_votes WHERE lore_id = ? AND voter_user_id = ?'
     )
@@ -120,7 +225,19 @@ loreRoutes.post('/:loreId/vote', requireAuth, async (c) => {
       .first();
 
     if (existingVote) {
-      return c.json({ success: false, error: 'Already voted' }, 409);
+      return c.json({ success: false, error: 'Already voted on this lore' }, 409);
+    }
+
+    // Check total votes used today (limit 3 per user per day)
+    const today = new Date().toISOString().split('T')[0];
+    const dailyVoteCount = await c.env.DB.prepare(
+      'SELECT COUNT(*) as count FROM lore_votes WHERE voter_user_id = ? AND date(created_at) = ?'
+    )
+      .bind(userId, today)
+      .first<{ count: number }>();
+
+    if (dailyVoteCount && dailyVoteCount.count >= 3) {
+      return c.json({ success: false, error: 'Daily vote limit reached (3 votes per day)' }, 429);
     }
 
     // Create vote
@@ -216,5 +333,115 @@ loreRoutes.get('/characters/:characterId/lore', async (c) => {
   } catch (error) {
     console.error('Get lore error:', error);
     return c.json({ success: false, error: 'Failed to get lore' }, 500);
+  }
+});
+
+// Get user's remaining votes for today
+loreRoutes.get('/votes/remaining', requireAuth, async (c) => {
+  try {
+    const userId = c.get('userId' as never) as string;
+    const today = new Date().toISOString().split('T')[0];
+    
+    const dailyVoteCount = await c.env.DB.prepare(
+      'SELECT COUNT(*) as count FROM lore_votes WHERE voter_user_id = ? AND date(created_at) = ?'
+    )
+      .bind(userId, today)
+      .first<{ count: number }>();
+
+    const votesUsed = dailyVoteCount?.count || 0;
+    const votesRemaining = Math.max(0, 3 - votesUsed);
+
+    return c.json({ 
+      success: true, 
+      data: { 
+        votes_used: votesUsed,
+        votes_remaining: votesRemaining,
+        max_votes: 3
+      } 
+    });
+  } catch (error) {
+    console.error('Get remaining votes error:', error);
+    return c.json({ success: false, error: 'Failed to get remaining votes' }, 500);
+  }
+});
+
+// Get hourly top 3 lore entries
+loreRoutes.get('/leaderboard/hourly', async (c) => {
+  try {
+    const hour = parseInt(c.req.query('hour') || '0'); // 0-23
+    const date = c.req.query('date') || new Date().toISOString().split('T')[0];
+    
+    // Get top 3 lore entries for the specified hour
+    const startTime = `${date} ${hour.toString().padStart(2, '0')}:00:00`;
+    const endTime = `${date} ${hour.toString().padStart(2, '0')}:59:59`;
+    
+    const topLore = await c.env.DB.prepare(
+      `SELECT l.*, u.username as author_username, c.name as character_name,
+              COUNT(lv.id) as vote_count
+       FROM lore l
+       LEFT JOIN users u ON l.author_user_id = u.id
+       LEFT JOIN characters c ON l.character_id = c.id
+       LEFT JOIN lore_votes lv ON l.id = lv.lore_id
+       WHERE l.created_at BETWEEN ? AND ?
+       GROUP BY l.id
+       ORDER BY vote_count DESC, l.created_at ASC
+       LIMIT 3`
+    )
+      .bind(startTime, endTime)
+      .all();
+
+    return c.json({ 
+      success: true, 
+      data: {
+        hour,
+        date,
+        top_lore: topLore.results || [],
+        time_range: { start: startTime, end: endTime }
+      }
+    });
+  } catch (error) {
+    console.error('Get hourly leaderboard error:', error);
+    return c.json({ success: false, error: 'Failed to get hourly leaderboard' }, 500);
+  }
+});
+
+// Get current hour's live rankings
+loreRoutes.get('/leaderboard/current', async (c) => {
+  try {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentDate = now.toISOString().split('T')[0];
+    
+    const startTime = `${currentDate} ${currentHour.toString().padStart(2, '0')}:00:00`;
+    const endTime = `${currentDate} ${currentHour.toString().padStart(2, '0')}:59:59`;
+    
+    const topLore = await c.env.DB.prepare(
+      `SELECT l.*, u.username as author_username, c.name as character_name,
+              COUNT(lv.id) as vote_count
+       FROM lore l
+       LEFT JOIN users u ON l.author_user_id = u.id
+       LEFT JOIN characters c ON l.character_id = c.id
+       LEFT JOIN lore_votes lv ON l.id = lv.lore_id
+       WHERE l.created_at BETWEEN ? AND ?
+       GROUP BY l.id
+       ORDER BY vote_count DESC, l.created_at ASC
+       LIMIT 10`
+    )
+      .bind(startTime, endTime)
+      .all();
+
+    return c.json({ 
+      success: true, 
+      data: {
+        hour: currentHour,
+        date: currentDate,
+        live_rankings: topLore.results || [],
+        time_range: { start: startTime, end: endTime },
+        minutes_remaining: 59 - now.getMinutes()
+      }
+    });
+  } catch (error) {
+    console.error('Get current leaderboard error:', error);
+    return c.json({ success: false, error: 'Failed to get current leaderboard' }, 500);
   }
 });

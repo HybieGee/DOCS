@@ -149,8 +149,8 @@ export default function Home() {
         // Add to characters display
         setCharacters(prev => [creationAsCharacter, ...prev]);
         
-        // Show creation details
-        alert(`🎉 Created ${result.data.traits.form} at level ${result.data.level}!\nTraits: ${Object.entries(result.data.traits).map(([k,v]) => `${k}: ${v}`).join(', ')}`);
+        // Show creation details in console for debugging
+        console.log('Created droplet:', result.data.traits);
       }
       
       // Refresh world state

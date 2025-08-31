@@ -8,14 +8,20 @@ import { ensureBlackAndWhite, validateImageFormat } from '../lib/postprocess';
 
 export const creationRoutes = new Hono<{ Bindings: Env }>();
 
-// Rate limiting helper
+// Rate limiting helper - more permissive for high load
 async function checkRateLimit(c: any, key: string): Promise<boolean> {
   const current = await c.env.CACHE.get(key);
   if (current) {
-    return false; // Rate limited
+    const count = parseInt(current);
+    if (count >= 3) { // Allow 3 creations per minute
+      return false; // Rate limited
+    }
+    // Increment count
+    await c.env.CACHE.put(key, (count + 1).toString(), { expirationTtl: 60 });
+    return true;
   }
   
-  // Set rate limit (1 creation per 60 seconds - minimum KV TTL)
+  // First creation in this minute
   await c.env.CACHE.put(key, '1', { expirationTtl: 60 });
   return true;
 }
@@ -64,7 +70,7 @@ creationRoutes.post('/', async (c) => {
     
     const canCreate = await checkRateLimit(c, rateLimitKey);
     if (!canCreate) {
-      return c.json({ success: false, error: 'Rate limit exceeded. Please wait 60 seconds between creations.' }, 429);
+      return c.json({ success: false, error: 'Rate limit exceeded. Maximum 3 creations per minute.' }, 429);
     }
 
     // Validate level
@@ -86,9 +92,28 @@ creationRoutes.post('/', async (c) => {
     
     console.log(`Generating creation ${id} with seed ${seed.slice(0, 8)}... at level ${level}`);
     
-    // Generate image using Stability AI
+    // Generate image using Stability AI with retry logic
     const provider = new StabilityProvider(c.env.STABILITY_API_KEY);
-    const output = await provider.generate({ seed, level, size: "1024x1024" });
+    let output;
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      try {
+        output = await provider.generate({ seed, level, size: "1024x1024" });
+        break; // Success, exit retry loop
+      } catch (error) {
+        attempts++;
+        console.error(`Image generation attempt ${attempts} failed:`, error);
+        
+        if (attempts >= maxAttempts) {
+          throw new Error(`Image generation failed after ${maxAttempts} attempts: ${error}`);
+        }
+        
+        // Exponential backoff: wait 1s, 2s, 4s...
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempts - 1) * 1000));
+      }
+    }
     
     // Validate image format
     if (!validateImageFormat(output.png)) {
@@ -124,6 +149,64 @@ creationRoutes.post('/', async (c) => {
     
     // Store record in KV
     await c.env.CREATIONS.put(id, JSON.stringify(record));
+    
+    // Also store in cache for the characters endpoint
+    const cacheKey = `recent_creation_${id}`;
+    await c.env.CACHE.put(cacheKey, JSON.stringify(record), { expirationTtl: 3600 }); // 1 hour cache
+    
+    // Update world state total_characters count with optimistic locking
+    let worldStateUpdated = false;
+    for (let i = 0; i < 3; i++) {
+      try {
+        const result = await c.env.DB.prepare(
+          `UPDATE world_state SET 
+           total_characters = total_characters + 1, 
+           updated_at = CURRENT_TIMESTAMP 
+           WHERE id = 1`
+        ).run();
+        
+        if (result.changes > 0) {
+          worldStateUpdated = true;
+          break;
+        }
+      } catch (error) {
+        console.error(`World state update attempt ${i + 1} failed:`, error);
+        if (i === 2) {
+          console.error('Failed to update world state after 3 attempts');
+          // Don't fail the entire request if world state update fails
+        }
+        // Brief delay before retry
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    
+    if (worldStateUpdated) {
+      // Clear world state cache so it gets refreshed
+      await c.env.CACHE.delete('world_state');
+      console.log(`Updated world state character count`);
+    }
+
+    // Broadcast creation to realtime subscribers
+    try {
+      if ((c.env as any).WORLD) {
+        const worldId = (c.env as any).WORLD.idFromName('world-room');
+        const worldStub = (c.env as any).WORLD.get(worldId);
+        await worldStub.fetch('http://internal/broadcast', {
+          method: 'POST',
+          body: JSON.stringify({
+            type: 'character_spawn',
+            payload: {
+              character: record,
+              total_characters: 1 // Will be updated by the durable object
+            },
+          }),
+        });
+        console.log(`Broadcasted creation ${id}`);
+      }
+    } catch (error) {
+      console.error('Failed to broadcast creation:', error);
+      // Don't fail the entire request if broadcast fails
+    }
     
     console.log(`Creation ${id} generated successfully`);
     

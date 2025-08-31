@@ -109,18 +109,26 @@ export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldC
         
         return;
       } else {
-        // Try to load the image
+        // Try to load the image - don't draw fallback dot, just wait
         loadImage(character.image_url)
           .then(img => {
             imageCache.current.set(character.id, img);
           })
           .catch(err => {
             console.error(`Failed to load image for character ${character.id}:`, err);
+            // Only on error, draw the fallback dot
+            drawFallbackDot(ctx, character, x, y);
           });
+        // Return without drawing anything while loading
+        return;
       }
     }
     
-    // Fallback: Draw colored dot for characters without images or while loading
+    // Draw fallback dot for characters without images
+    drawFallbackDot(ctx, character, x, y);
+  };
+
+  const drawFallbackDot = (ctx: CanvasRenderingContext2D, character: Character, x: number, y: number) => {
     const colors = character.color_palette ? JSON.parse(character.color_palette) : { primary: '#FFFFFF' };
     const size = 10 + character.level * 5;
 
@@ -159,7 +167,8 @@ export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldC
     // Find clicked character
     const clickedCharacter = characters.find((char) => {
       const distance = Math.sqrt(Math.pow(char.x - x, 2) + Math.pow(char.y - y, 2));
-      const size = 10 + char.level * 5;
+      // Use appropriate size based on whether character has an image
+      const size = char.image_url ? (40 + char.level * 20) / 2 : (10 + char.level * 5);
       return distance <= size;
     });
 
