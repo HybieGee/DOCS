@@ -21,25 +21,24 @@ export class StabilityProvider implements ImageProvider {
   }
 
   private buildPrompt(level: 1 | 2 | 3, traits: Record<string, any>): string {
-    const basePrompt = `Minimalist monochrome line art, white strokes ONLY, TRANSPARENT BACKGROUND.
-Clean vector-like outlines, smooth contours, subtle rain lines, thin ripple curves.
-Subject: WATER-TYPE CREATURE born from a droplet, floating in empty space.
-TRANSPARENT PNG, no background, no black background, creature only.
-No grey shading, no gradients, no color, no text, no logos. 1024x1024. High contrast.`;
+    const basePrompt = `STICKER, DIE-CUT STICKER, isolated object, no background, cutout.
+White line art creature only, thin white outlines, minimalist design.
+Subject: Simple WATER DROPLET CREATURE made of white lines.
+Isolated on transparent, PNG cutout, sticker format, no square, no frame.`;
 
     const levelPrompts = {
-      1: `Level 1: simple droplet blob with tiny ${traits.eyes} eyes; ${traits.ripple_count} ripples; no accessories; cute, basic silhouette.`,
-      2: `Level 2: add small ${traits.fins} fins or splash arcs; ${traits.ripple_count} ripples; ${traits.crest} crest or wave tail; slightly more segments.`,
-      3: `Level 3: dynamic wave beast; ${traits.crest} crest, ${traits.foam} foam streaks as white hatching; ${traits.ripple_count} ripples; ${traits.posture} posture.`
+      1: `Level 1: tiny water droplet with ${traits.eyes} dot eyes, ${traits.ripple_count} ripple lines, simple round shape.`,
+      2: `Level 2: water droplet with ${traits.fins} fin lines, ${traits.ripple_count} ripples, ${traits.crest} wave tail.`,
+      3: `Level 3: flowing water creature, ${traits.crest} crest lines, ${traits.foam} foam streaks, ${traits.ripple_count} ripples.`
     };
 
-    const styleNote = `IMPORTANT: Output must be a TRANSPARENT PNG with white line art only. No background at all.`;
+    const styleNote = `CRITICAL: Die-cut sticker style, isolated white line art only, completely transparent background, no box, no frame, no square background.`;
 
     return `${basePrompt}\n\n${levelPrompts[level]}\n\n${styleNote}`;
   }
 
   private buildNegativePrompt(): string {
-    return `black background, any background, filled background, color, grayscale soft shading, gradient, filled shapes, background texture, text, watermark, signature, photo, 3D, render, grey noise, low-res, blurry, realistic, photographic, square frame, border`;
+    return `background, black background, white background, grey background, any background color, filled background, square, rectangle, frame, border, box, color, gradient, shading, filled shapes, solid shapes, photo, 3D, realistic`;
   }
 
   private async callStabilityAPI(prompt: string, negativePrompt: string, seedInt: number): Promise<ArrayBuffer> {
@@ -51,8 +50,8 @@ No grey shading, no gradients, no color, no text, no logos. 1024x1024. High cont
     formData.append('width', '1024');
     formData.append('height', '1024');
     formData.append('output_format', 'png');
-    formData.append('cfg_scale', '7');
-    formData.append('steps', '20');
+    formData.append('cfg_scale', '10'); // Higher guidance for better prompt following
+    formData.append('steps', '30'); // More steps for better quality
 
     const response = await fetch('https://api.stability.ai/v2beta/stable-image/generate/sd3', {
       method: 'POST',
