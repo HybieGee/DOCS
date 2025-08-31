@@ -87,7 +87,7 @@ creationRoutes.post('/', async (c) => {
     }
 
     // Generate deterministic seed
-    const seedInput = `${wallet || userId || clientIP}_${Date.now()}`;
+    const seedInput = `${wallet || userId}_${Date.now()}`;
     const seed = await generateSeed(seedInput);
     
     // Generate creation ID
