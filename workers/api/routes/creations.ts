@@ -252,6 +252,48 @@ creationRoutes.post('/', async (c) => {
   }
 });
 
+// GET /api/creations/can-create - Check if user can create today
+// NOTE: This must come BEFORE /:id route to avoid being caught by wildcard
+creationRoutes.get('/can-create', async (c) => {
+  try {
+    // Get user info if authenticated
+    let userId: string | null = null;
+    try {
+      const token = getCookie(c, 'session');
+      if (token) {
+        const payload = await verifyJWT(token, c.env.JWT_SECRET);
+        if (payload) {
+          userId = payload.sub;
+        }
+      }
+    } catch (error) {
+      return c.json({ success: false, error: 'Not authenticated' }, 401);
+    }
+
+    if (!userId) {
+      return c.json({ success: false, error: 'Must be logged in' }, 401);
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const rateLimitKey = `daily_creation_limit:${userId}:${today}`;
+    
+    const hasCreatedToday = await c.env.CACHE.get(rateLimitKey);
+    const canCreate = !hasCreatedToday;
+
+    return c.json({ 
+      success: true, 
+      data: { 
+        can_create: canCreate,
+        already_created_today: !!hasCreatedToday,
+        date: today
+      } 
+    });
+  } catch (error) {
+    console.error('Can create check error:', error);
+    return c.json({ success: false, error: 'Failed to check creation status' }, 500);
+  }
+});
+
 // GET /api/creations/:id - Get creation metadata
 creationRoutes.get('/:id', async (c) => {
   try {
@@ -309,47 +351,6 @@ creationRoutes.get('/:id/image', async (c) => {
   } catch (error) {
     console.error('Serve image error:', error);
     return new Response('Internal Server Error', { status: 500 });
-  }
-});
-
-// GET /api/creations/can-create - Check if user can create today
-creationRoutes.get('/can-create', async (c) => {
-  try {
-    // Get user info if authenticated
-    let userId: string | null = null;
-    try {
-      const token = getCookie(c, 'session');
-      if (token) {
-        const payload = await verifyJWT(token, c.env.JWT_SECRET);
-        if (payload) {
-          userId = payload.sub;
-        }
-      }
-    } catch (error) {
-      return c.json({ success: false, error: 'Not authenticated' }, 401);
-    }
-
-    if (!userId) {
-      return c.json({ success: false, error: 'Must be logged in' }, 401);
-    }
-
-    const today = new Date().toISOString().split('T')[0];
-    const rateLimitKey = `daily_creation_limit:${userId}:${today}`;
-    
-    const hasCreatedToday = await c.env.CACHE.get(rateLimitKey);
-    const canCreate = !hasCreatedToday;
-
-    return c.json({ 
-      success: true, 
-      data: { 
-        can_create: canCreate,
-        already_created_today: !!hasCreatedToday,
-        date: today
-      } 
-    });
-  } catch (error) {
-    console.error('Can create check error:', error);
-    return c.json({ success: false, error: 'Failed to check creation status' }, 500);
   }
 });
 

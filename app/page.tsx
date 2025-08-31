@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { WorldCanvas } from './components/WorldCanvas';
 import { CharacterCard } from './components/CharacterCard';
 import { SimpleAuthModal } from './components/SimpleAuthModal';
+import { AccountModal } from './components/AccountModal';
 import { CreationsModal } from './components/CreationsModal';
 import { useAuth } from './hooks/useAuth';
 import type { Character } from '@/lib/types';
@@ -21,6 +22,7 @@ export default function Home() {
   });
   const [isMinting, setIsMinting] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
   const [canCreateToday, setCanCreateToday] = useState(true);
   const [showCreationsModal, setShowCreationsModal] = useState(false);
 
@@ -223,7 +225,7 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <span className="text-white/90 text-sm">Welcome, <strong>{user.username}</strong></span>
               <button
-                onClick={() => setShowAuthModal(true)}
+                onClick={() => setShowAccountModal(true)}
                 className="minimal-button text-xs"
               >
                 Account
@@ -340,6 +342,12 @@ export default function Home() {
       <SimpleAuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
+      />
+
+      {/* Account Modal */}
+      <AccountModal
+        isOpen={showAccountModal}
+        onClose={() => setShowAccountModal(false)}
       />
 
       {/* Creations Modal */}

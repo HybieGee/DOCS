@@ -194,6 +194,63 @@ authRoutes.post('/wallet/verify', async (c) => {
   }
 });
 
+// POST /api/auth/change-password - Change user password
+authRoutes.post('/change-password', async (c) => {
+  try {
+    // Get user from session
+    const token = getCookie(c, 'session');
+    if (!token) {
+      return c.json({ success: false, error: 'Not authenticated' }, 401);
+    }
+
+    const payload = await verifyJWT(token, c.env.JWT_SECRET);
+    if (!payload) {
+      return c.json({ success: false, error: 'Invalid session' }, 401);
+    }
+
+    const { current_password, new_password } = await c.req.json<{
+      current_password: string;
+      new_password: string;
+    }>();
+
+    if (!current_password || !new_password) {
+      return c.json({ success: false, error: 'Current and new passwords required' }, 400);
+    }
+
+    if (new_password.length < 6) {
+      return c.json({ success: false, error: 'New password must be at least 6 characters' }, 400);
+    }
+
+    // Get user from database
+    const user = await c.env.DB.prepare(
+      'SELECT * FROM users WHERE id = ?'
+    ).bind(payload.sub).first();
+
+    if (!user) {
+      return c.json({ success: false, error: 'User not found' }, 404);
+    }
+
+    // Verify current password
+    const currentPasswordValid = await verifyPassword(current_password, user.password_hash as string);
+    if (!currentPasswordValid) {
+      return c.json({ success: false, error: 'Current password is incorrect' }, 400);
+    }
+
+    // Hash new password
+    const newPasswordHash = await hashPassword(new_password);
+
+    // Update password in database
+    await c.env.DB.prepare(
+      'UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).bind(newPasswordHash, payload.sub).run();
+
+    return c.json({ success: true, data: { message: 'Password changed successfully' } });
+  } catch (error) {
+    console.error('Password change error:', error);
+    return c.json({ success: false, error: 'Failed to change password' }, 500);
+  }
+});
+
 // Helper function to verify Turnstile
 async function verifyTurnstile(token: string, secret: string): Promise<boolean> {
   try {

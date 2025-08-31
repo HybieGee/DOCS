@@ -6,7 +6,7 @@ import { setCookie, getCookie } from 'hono/cookie';
 import { authRoutes } from './routes/auth';
 import { characterRoutes } from './routes/characters';
 import { creationRoutes } from './routes/creations';
-// import { loreRoutes } from './routes/lore';
+import { loreRoutes } from './routes/lore';
 import { worldRoutes } from './routes/world';
 // import { leaderboardRoutes } from './routes/leaderboard';
 // import { WorldRoom } from './durable-objects/world-room';
@@ -58,21 +58,50 @@ app.get('/debug/db', async (c) => {
 app.route('/api/auth', authRoutes);
 app.route('/api/characters', characterRoutes);
 app.route('/api/creations', creationRoutes);
-// app.route('/api', loreRoutes);  // Lore routes include /characters/:id/lore prefix
+app.route('/api/lore', loreRoutes);  // Lore routes include /characters/:id/lore prefix
 app.route('/api/world', worldRoutes);
 // app.route('/api/leaderboard', leaderboardRoutes);
 
-// WebSocket endpoint for real-time updates (temporarily disabled)
-// app.get('/api/realtime', async (c) => {
-//   const upgradeHeader = c.req.header('Upgrade');
-//   if (upgradeHeader !== 'websocket') {
-//     return c.text('Expected websocket', 426);
-//   }
+// WebSocket endpoint for real-time updates (simplified without Durable Objects)
+app.get('/api/realtime', async (c) => {
+  const upgradeHeader = c.req.header('Upgrade');
+  if (upgradeHeader !== 'websocket') {
+    return c.text('Expected websocket', 426);
+  }
 
-//   const id = c.env.WORLD.idFromName('world-room');
-//   const stub = c.env.WORLD.get(id);
-//   return stub.fetch(c.req.raw);
-// });
+  // For now, return a simple WebSocket that doesn't broadcast
+  // This prevents the connection errors while we work on other features
+  try {
+    const [client, server] = Object.values(new WebSocketPair());
+    
+    // Accept the WebSocket connection
+    server.accept();
+    
+    // Send a welcome message
+    server.send(JSON.stringify({
+      type: 'connected',
+      payload: { message: 'Connected to realtime updates' }
+    }));
+    
+    // Handle incoming messages (just echo for now)
+    server.addEventListener('message', (event) => {
+      console.log('Received message:', event.data);
+    });
+    
+    // Handle close
+    server.addEventListener('close', () => {
+      console.log('WebSocket closed');
+    });
+    
+    return new Response(null, {
+      status: 101,
+      webSocket: client,
+    });
+  } catch (error) {
+    console.error('WebSocket error:', error);
+    return c.text('WebSocket error', 500);
+  }
+});
 
 export default app;
 
