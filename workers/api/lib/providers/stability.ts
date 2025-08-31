@@ -21,9 +21,10 @@ export class StabilityProvider implements ImageProvider {
   }
 
   private buildPrompt(level: 1 | 2 | 3, traits: Record<string, any>): string {
-    const basePrompt = `Minimalist monochrome line art, white strokes on deep black background.
+    const basePrompt = `Minimalist monochrome line art, white strokes ONLY, TRANSPARENT BACKGROUND.
 Clean vector-like outlines, smooth contours, subtle rain lines, thin ripple curves.
-Subject: WATER-TYPE CREATURE born from a droplet.
+Subject: WATER-TYPE CREATURE born from a droplet, floating in empty space.
+TRANSPARENT PNG, no background, no black background, creature only.
 No grey shading, no gradients, no color, no text, no logos. 1024x1024. High contrast.`;
 
     const levelPrompts = {
@@ -32,13 +33,13 @@ No grey shading, no gradients, no color, no text, no logos. 1024x1024. High cont
       3: `Level 3: dynamic wave beast; ${traits.crest} crest, ${traits.foam} foam streaks as white hatching; ${traits.ripple_count} ripples; ${traits.posture} posture.`
     };
 
-    const styleNote = `Style must match a website that uses thin white lines over a black hero background with rain-like vertical strokes.`;
+    const styleNote = `IMPORTANT: Output must be a TRANSPARENT PNG with white line art only. No background at all.`;
 
     return `${basePrompt}\n\n${levelPrompts[level]}\n\n${styleNote}`;
   }
 
   private buildNegativePrompt(): string {
-    return `color, grayscale soft shading, gradient, filled shapes, background texture, text, watermark, signature, photo, 3D, render, grey noise, low-res, blurry, realistic, photographic`;
+    return `black background, any background, filled background, color, grayscale soft shading, gradient, filled shapes, background texture, text, watermark, signature, photo, 3D, render, grey noise, low-res, blurry, realistic, photographic, square frame, border`;
   }
 
   private async callStabilityAPI(prompt: string, negativePrompt: string, seedInt: number): Promise<ArrayBuffer> {

@@ -153,8 +153,9 @@ export default function Home() {
         console.log('Created droplet:', result.data.traits);
       }
       
-      // Refresh world state
+      // Refresh world state and characters immediately
       await fetchWorldState();
+      await fetchCharacters();
       
     } catch (error) {
       console.error('Creation error:', error);

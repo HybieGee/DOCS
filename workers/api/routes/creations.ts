@@ -147,12 +147,42 @@ creationRoutes.post('/', async (c) => {
       created_at: new Date().toISOString()
     };
     
-    // Store record in KV
+    // Store record in KV for permanent storage
     await c.env.CREATIONS.put(id, JSON.stringify(record));
     
-    // Also store in cache for the characters endpoint
-    const cacheKey = `recent_creation_${id}`;
-    await c.env.CACHE.put(cacheKey, JSON.stringify(record), { expirationTtl: 3600 }); // 1 hour cache
+    // Also store in database for immediate visibility
+    try {
+      await c.env.DB.prepare(
+        `INSERT INTO characters (
+          id, owner_user_id, wallet_address, name, is_legendary,
+          x, y, level, water_count, sprite_seed, color_palette, accessories
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+        .bind(
+          id, 
+          userId || 'anonymous',
+          wallet || '',
+          `Creation ${id.slice(-4)}`,
+          level === 3 ? 1 : 0, // legendary if level 3
+          Math.random() * 1200, // random X position
+          Math.random() * 200 + 400, // random Y position
+          level,
+          0, // water count starts at 0
+          seed,
+          JSON.stringify({
+            primary: level >= 3 ? '#FFD700' : '#FFFFFF',
+            secondary: level >= 2 ? '#CCCCCC' : '#999999',
+            accent: '#FFFFFF',
+            hasColor: level >= 2
+          }),
+          record.image_url // Store image URL in accessories field temporarily
+        )
+        .run();
+      console.log(`Stored creation ${id} in database`);
+    } catch (dbError) {
+      console.error('Failed to store in database:', dbError);
+      // Continue anyway - KV storage succeeded
+    }
     
     // Update world state total_characters count with optimistic locking
     let worldStateUpdated = false;

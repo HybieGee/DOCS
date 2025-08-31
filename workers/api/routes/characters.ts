@@ -232,11 +232,11 @@ characterRoutes.post('/:id/water', requireAuth, async (c) => {
   }
 });
 
-// Get all characters (includes both database characters and KV creations)
+// Get all characters (now all stored in database)
 characterRoutes.get('/', async (c) => {
   try {
     const cursor = c.req.query('cursor');
-    const limit = Math.min(parseInt(c.req.query('limit') || '50'), 100);
+    const limit = Math.min(parseInt(c.req.query('limit') || '100'), 200);
 
     let query = `
       SELECT c.*, u.username as owner_username
@@ -263,59 +263,17 @@ characterRoutes.get('/', async (c) => {
       .bind(...params)
       .all();
 
-    // Also fetch recent creations from KV
-    let allCharacters = characters.results || [];
-    
-    try {
-      // Get list of creation keys (this is a workaround since KV doesn't have list functionality)
-      // We'll fetch the most recent ones by trying common patterns
-      const creationPromises = [];
-      for (let i = 0; i < 20; i++) {
-        // Try to get recent creations by checking cache
-        const cacheKey = `recent_creation_${i}`;
-        creationPromises.push(c.env.CACHE.get(cacheKey));
+    // For creations that start with 'cr_', add the image_url from accessories field
+    const allCharacters = (characters.results || []).map((char: any) => {
+      if (char.id && char.id.startsWith('cr_') && char.accessories) {
+        // For AI creations, the image URL is stored in accessories field
+        return {
+          ...char,
+          image_url: char.accessories
+        };
       }
-      
-      const cachedCreations = await Promise.all(creationPromises);
-      
-      for (const cachedCreation of cachedCreations) {
-        if (cachedCreation) {
-          try {
-            const creation = JSON.parse(cachedCreation);
-            // Convert creation to character format
-            const creationAsCharacter = {
-              id: creation.id,
-              owner_user_id: creation.user_id,
-              wallet_address: creation.wallet,
-              name: `Creation ${creation.id.slice(-4)}`,
-              is_legendary: creation.level === 3,
-              x: Math.random() * 1200,
-              y: Math.random() * 200 + 400,
-              level: creation.level,
-              water_count: 0,
-              sprite_seed: creation.seed,
-              color_palette: JSON.stringify({
-                primary: creation.level >= 3 ? '#FFD700' : '#FFFFFF',
-                secondary: creation.level >= 2 ? '#CCCCCC' : '#999999',
-                accent: '#FFFFFF',
-                hasColor: creation.level >= 2
-              }),
-              created_at: creation.created_at,
-              updated_at: creation.created_at,
-              image_url: creation.image_url,
-              owner_username: null
-            };
-            
-            allCharacters.unshift(creationAsCharacter);
-          } catch (e) {
-            // Skip invalid cached creations
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching creations:', error);
-      // Continue with just database characters if creation fetch fails
-    }
+      return char;
+    });
 
     return c.json({ success: true, data: allCharacters });
   } catch (error) {
