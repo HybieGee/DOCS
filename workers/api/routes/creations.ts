@@ -116,7 +116,7 @@ creationRoutes.post('/', async (c) => {
     }
     
     // Validate image format
-    if (!validateImageFormat(output.png)) {
+    if (!output || !validateImageFormat(output.png)) {
       throw new Error('Generated image is not a valid PNG');
     }
     

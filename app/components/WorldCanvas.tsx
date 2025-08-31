@@ -55,6 +55,7 @@ export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldC
         cancelAnimationFrame(animationRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [characters, worldState, drawWorldBackground]);
 
 
