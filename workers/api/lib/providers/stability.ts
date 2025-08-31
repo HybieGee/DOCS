@@ -12,8 +12,13 @@ export class StabilityProvider implements ImageProvider {
     const negativePrompt = this.buildNegativePrompt();
     
     try {
+      // First generate the image
       const png = await this.callStabilityAPI(prompt, negativePrompt, seedInt);
-      return { png, traits };
+      
+      // Then remove the background
+      const transparentPng = await this.removeBackground(png);
+      
+      return { png: transparentPng, traits };
     } catch (error) {
       console.error('Stability AI error:', error);
       throw new Error(`Image generation failed: ${error}`);
@@ -78,5 +83,52 @@ Isolated on transparent, PNG cutout, sticker format, no square, no frame.`;
     }
 
     return b64ToArrayBuffer(base64Image);
+  }
+
+  private async removeBackground(imageBuffer: ArrayBuffer): Promise<ArrayBuffer> {
+    try {
+      console.log('Removing background from generated image...');
+      
+      // Create FormData for the background removal request
+      const formData = new FormData();
+      
+      // Convert ArrayBuffer to Blob for FormData
+      const blob = new Blob([imageBuffer], { type: 'image/png' });
+      formData.append('image', blob, 'image.png');
+      formData.append('output_format', 'png');
+      
+      const response = await fetch('https://api.stability.ai/v2beta/stable-image/edit/remove-background', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Accept': 'application/json'
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error('Background removal failed:', error);
+        // If background removal fails, return original image
+        return imageBuffer;
+      }
+
+      const result = await response.json();
+      
+      // Handle different response formats
+      const base64Image = result.image || result.images?.[0]?.b64 || result.images?.[0]?.image;
+      
+      if (!base64Image) {
+        console.error('No image in background removal response');
+        return imageBuffer;
+      }
+
+      console.log('Background removed successfully');
+      return b64ToArrayBuffer(base64Image);
+    } catch (error) {
+      console.error('Background removal error:', error);
+      // Return original image if removal fails
+      return imageBuffer;
+    }
   }
 }
