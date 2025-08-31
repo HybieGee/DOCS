@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { WorldCanvas } from './components/WorldCanvas';
 import { CharacterCard } from './components/CharacterCard';
 import { SimpleAuthModal } from './components/SimpleAuthModal';
+import { CreationsModal } from './components/CreationsModal';
 import { useAuth } from './hooks/useAuth';
 import type { Character } from '@/lib/types';
 import { getApiUrl, getWebSocketUrl } from '@/lib/utils/api';
@@ -21,6 +22,7 @@ export default function Home() {
   const [isMinting, setIsMinting] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [canCreateToday, setCanCreateToday] = useState(true);
+  const [showCreationsModal, setShowCreationsModal] = useState(false);
 
   const fetchWorldState = useCallback(async () => {
     try {
@@ -277,8 +279,16 @@ export default function Home() {
           )}
         </div>
 
-        {/* Top Right - Future buttons placeholder */}
+        {/* Top Right - Navigation buttons */}
         <div className="top-right-buttons">
+          {user && (
+            <button 
+              className="minimal-button text-xs"
+              onClick={() => setShowCreationsModal(true)}
+            >
+              Creations
+            </button>
+          )}
           <button 
             className="minimal-button text-xs"
             onClick={() => alert('Info coming soon!')}
@@ -287,9 +297,9 @@ export default function Home() {
           </button>
           <button 
             className="minimal-button text-xs"
-            onClick={() => alert('Lore system coming soon!')}
+            onClick={() => alert('Lore voting coming soon!')}
           >
-            Lore
+            Vote
           </button>
         </div>
       </div>
@@ -331,6 +341,15 @@ export default function Home() {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
       />
+
+      {/* Creations Modal */}
+      {user && (
+        <CreationsModal
+          isOpen={showCreationsModal}
+          onClose={() => setShowCreationsModal(false)}
+          userId={user.id}
+        />
+      )}
     </div>
   );
 }

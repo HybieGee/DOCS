@@ -352,3 +352,61 @@ creationRoutes.get('/can-create', async (c) => {
     return c.json({ success: false, error: 'Failed to check creation status' }, 500);
   }
 });
+
+// PUT /api/creations/:id/name - Update creation name
+creationRoutes.put('/:id/name', async (c) => {
+  try {
+    // Get user info
+    let userId: string | null = null;
+    try {
+      const token = getCookie(c, 'session');
+      if (token) {
+        const payload = await verifyJWT(token, c.env.JWT_SECRET);
+        if (payload) {
+          userId = payload.sub;
+        }
+      }
+    } catch (error) {
+      return c.json({ success: false, error: 'Not authenticated' }, 401);
+    }
+
+    if (!userId) {
+      return c.json({ success: false, error: 'Must be logged in' }, 401);
+    }
+
+    const creationId = c.req.param('id');
+    const body = await c.req.json<{ name: string }>();
+    
+    if (!body.name || body.name.length > 50) {
+      return c.json({ success: false, error: 'Name must be 1-50 characters' }, 400);
+    }
+
+    // Check if this is a creation ID and user owns it
+    if (!creationId.startsWith('cr_')) {
+      return c.json({ success: false, error: 'Invalid creation ID' }, 400);
+    }
+
+    // Get the creation from KV to verify ownership
+    const creationRecord = await c.env.CREATIONS.get(creationId);
+    if (!creationRecord) {
+      return c.json({ success: false, error: 'Creation not found' }, 404);
+    }
+
+    const creation = JSON.parse(creationRecord);
+    if (creation.user_id !== userId) {
+      return c.json({ success: false, error: 'You can only edit your own creations' }, 403);
+    }
+
+    // Update the name in the database
+    await c.env.DB.prepare(
+      'UPDATE characters SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+    )
+      .bind(body.name, creationId)
+      .run();
+
+    return c.json({ success: true, data: { name: body.name } });
+  } catch (error) {
+    console.error('Update creation name error:', error);
+    return c.json({ success: false, error: 'Failed to update creation name' }, 500);
+  }
+});
