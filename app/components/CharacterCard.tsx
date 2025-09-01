@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/app/hooks/useAuth';
 import type { Character } from '@/lib/types';
 import { shortenAddress } from '@/lib/utils/solana';
+import { getApiUrl } from '@/lib/utils/api';
 
 interface CharacterCardProps {
   character: Character;
@@ -45,9 +46,16 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
   const handleSubmitLore = async () => {
     if (!user || !loreText.trim() || isSubmittingLore) return;
 
+    // Check if user owns this character/creation
+    const isOwner = character.owner_user_id === user.id;
+    if (!isOwner) {
+      alert('You can only add lore to your own creations');
+      return;
+    }
+
     setIsSubmittingLore(true);
     try {
-      const response = await fetch(`/api/characters/${character.id}/lore`, {
+      const response = await fetch(getApiUrl(`/api/lore/characters/${character.id}/lore`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ body: loreText }),
@@ -60,9 +68,11 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
       }
 
       setLoreText('');
+      alert('Lore added successfully!');
       // Refresh lore list
     } catch (error) {
       console.error('Lore submission error:', error);
+      alert(error instanceof Error ? error.message : 'Failed to add lore');
     } finally {
       setIsSubmittingLore(false);
     }
@@ -181,8 +191,8 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Lore Submission */}
-              {user && (
+              {/* Lore Submission - Only show for owner */}
+              {user && character.owner_user_id === user.id ? (
                 <div className="space-y-2">
                   <textarea
                     value={loreText}
@@ -202,6 +212,14 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
                       {isSubmittingLore ? 'Submitting...' : 'Submit Lore'}
                     </button>
                   </div>
+                </div>
+              ) : user ? (
+                <div className="bg-black/30 rounded-lg p-4 text-center">
+                  <p className="text-white/60 text-sm">Only the owner can add lore to this creation</p>
+                </div>
+              ) : (
+                <div className="bg-black/30 rounded-lg p-4 text-center">
+                  <p className="text-white/60 text-sm">Login to add lore to your creations</p>
                 </div>
               )}
 

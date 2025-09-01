@@ -63,7 +63,7 @@ loreRoutes.post('/characters/:id/lore', async (c) => {
     const loreId = `lore_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     await c.env.DB.prepare(
-      `INSERT INTO lore_entries (
+      `INSERT INTO lore (
         id, character_id, author_user_id, body, created_at
       ) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`
     )
@@ -92,7 +92,7 @@ loreRoutes.get('/characters/:id/lore', async (c) => {
     const characterId = c.req.param('id');
     
     const loreEntries = await c.env.DB.prepare(
-      `SELECT * FROM lore_entries 
+      `SELECT * FROM lore 
        WHERE character_id = ? 
        ORDER BY created_at DESC 
        LIMIT 50`

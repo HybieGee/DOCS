@@ -72,20 +72,26 @@ export function CreationsModal({ isOpen, onClose, userId }: CreationsModalProps)
 
       // Update lore (if provided)
       if (editLore.trim()) {
-        const response = await fetch(getApiUrl(`/api/lore/characters/${editingCreation}/lore`), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ 
-            body: editLore.trim(),
-            turnstile_token: '' // We'll add turnstile later if needed
-          })
-        });
+        try {
+          const response = await fetch(getApiUrl(`/api/lore/characters/${editingCreation}/lore`), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ 
+              body: editLore.trim()
+            })
+          });
 
-        if (!response.ok) {
-          const error = await response.json();
-          console.warn('Failed to update lore:', error.error);
-          // Don't throw error for lore - continue with name update success
+          if (!response.ok) {
+            const error = await response.json();
+            console.error('Failed to update lore:', error.error);
+            alert(`Failed to add lore: ${error.error}`);
+          } else {
+            console.log('Lore added successfully');
+          }
+        } catch (err) {
+          console.error('Failed to update lore:', err);
+          alert('Failed to add lore. Please try again.');
         }
       }
       
