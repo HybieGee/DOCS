@@ -293,13 +293,13 @@ export default function Home() {
           )}
           <button 
             className="minimal-button text-xs"
-            onClick={() => alert('Info coming soon!')}
+            onClick={() => window.location.href = '/info'}
           >
             Info
           </button>
           <button 
             className="minimal-button text-xs"
-            onClick={() => alert('Lore voting coming soon!')}
+            onClick={() => window.location.href = '/vote'}
           >
             Vote
           </button>
