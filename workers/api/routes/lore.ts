@@ -33,30 +33,17 @@ loreRoutes.post('/characters/:id/lore', async (c) => {
       return c.json({ success: false, error: 'Lore must be 1-500 characters' }, 400);
     }
 
-    // Verify ownership if it's a creation
-    if (characterId.startsWith('cr_')) {
-      const creationRecord = await c.env.CREATIONS.get(characterId);
-      if (!creationRecord) {
-        return c.json({ success: false, error: 'Creation not found' }, 404);
-      }
+    // Check ownership in database (works for both creations and characters)
+    const character = await c.env.DB.prepare(
+      'SELECT owner_user_id FROM characters WHERE id = ?'
+    ).bind(characterId).first();
 
-      const creation = JSON.parse(creationRecord);
-      if (creation.user_id !== userId) {
-        return c.json({ success: false, error: 'You can only add lore to your own creations' }, 403);
-      }
-    } else {
-      // For regular characters, check database ownership
-      const character = await c.env.DB.prepare(
-        'SELECT owner_user_id FROM characters WHERE id = ?'
-      ).bind(characterId).first();
+    if (!character) {
+      return c.json({ success: false, error: 'Character/Creation not found' }, 404);
+    }
 
-      if (!character) {
-        return c.json({ success: false, error: 'Character not found' }, 404);
-      }
-
-      if (character.owner_user_id !== userId) {
-        return c.json({ success: false, error: 'You can only add lore to your own characters' }, 403);
-      }
+    if (character.owner_user_id !== userId) {
+      return c.json({ success: false, error: 'You can only add lore to your own creations' }, 403);
     }
 
     // Store lore in database

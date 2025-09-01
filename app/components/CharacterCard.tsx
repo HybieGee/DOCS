@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/app/hooks/useAuth';
 import type { Character } from '@/lib/types';
@@ -18,6 +18,37 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
   const [loreText, setLoreText] = useState('');
   const [isSubmittingLore, setIsSubmittingLore] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'lore'>('info');
+  const [existingLore, setExistingLore] = useState<Array<{id: string; body: string; author_user_id: string; created_at: string}>>([]);
+  const [loadingLore, setLoadingLore] = useState(false);
+
+  // Fetch existing lore when component mounts or when lore tab is selected
+  useEffect(() => {
+    if (activeTab === 'lore') {
+      fetchLore();
+    }
+  }, [activeTab]);
+
+  const fetchLore = async () => {
+    setLoadingLore(true);
+    try {
+      const response = await fetch(getApiUrl(`/api/lore/characters/${character.id}/lore`), {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setExistingLore(data.data || []);
+      } else {
+        console.error('Failed to fetch lore');
+        setExistingLore([]);
+      }
+    } catch (error) {
+      console.error('Error fetching lore:', error);
+      setExistingLore([]);
+    } finally {
+      setLoadingLore(false);
+    }
+  };
 
   const handleWater = async () => {
     if (!user || isWatering) return;
@@ -70,6 +101,7 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
       setLoreText('');
       alert('Lore added successfully!');
       // Refresh lore list
+      await fetchLore();
     } catch (error) {
       console.error('Lore submission error:', error);
       alert(error instanceof Error ? error.message : 'Failed to add lore');
@@ -192,7 +224,7 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
           ) : (
             <div className="space-y-4">
               {/* Lore Submission - Only show for owner */}
-              {user && character.owner_user_id === user.id ? (
+              {user && character.owner_user_id === user.id && (
                 <div className="space-y-2">
                   <textarea
                     value={loreText}
@@ -213,19 +245,26 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
                     </button>
                   </div>
                 </div>
-              ) : user ? (
-                <div className="bg-black/30 rounded-lg p-4 text-center">
-                  <p className="text-white/60 text-sm">Only the owner can add lore to this creation</p>
-                </div>
-              ) : (
-                <div className="bg-black/30 rounded-lg p-4 text-center">
-                  <p className="text-white/60 text-sm">Login to add lore to your creations</p>
-                </div>
               )}
 
               {/* Existing Lore */}
               <div className="bg-black/30 rounded-lg p-4 max-h-60 overflow-y-auto">
-                <p className="text-white/60 text-center">No lore yet. Be the first to write!</p>
+                {loadingLore ? (
+                  <p className="text-white/60 text-center">Loading lore...</p>
+                ) : existingLore.length > 0 ? (
+                  <div className="space-y-3">
+                    {existingLore.map((lore) => (
+                      <div key={lore.id} className="border-b border-white/10 pb-2 last:border-b-0">
+                        <p className="text-white text-sm">{lore.body}</p>
+                        <p className="text-white/40 text-xs mt-1">
+                          {new Date(lore.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-white/60 text-center">No lore yet. Be the first to write!</p>
+                )}
               </div>
             </div>
           )}
