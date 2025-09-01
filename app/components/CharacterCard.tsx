@@ -14,6 +14,14 @@ interface CharacterCardProps {
 
 export function CharacterCard({ character, onClose }: CharacterCardProps) {
   const { user } = useAuth();
+  
+  // Debug logging
+  console.log('CharacterCard opened:', {
+    character: character.name,
+    characterId: character.id,
+    user: user?.username || 'Not logged in',
+    userLoggedIn: !!user
+  });
   const [isWatering, setIsWatering] = useState(false);
   const [loreText, setLoreText] = useState('');
   const [isSubmittingLore, setIsSubmittingLore] = useState(false);
@@ -267,7 +275,7 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
               </div>
 
               {/* Water Button */}
-              {user && (
+              {user ? (
                 <button
                   onClick={handleWater}
                   disabled={isWatering}
@@ -275,6 +283,10 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
                 >
                   {isWatering ? 'Watering...' : '💧 Water Character'}
                 </button>
+              ) : (
+                <div className="w-full py-3 bg-gray-600 text-white text-center rounded-lg">
+                  Login to water this character
+                </div>
               )}
             </div>
           ) : (
