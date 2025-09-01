@@ -191,12 +191,25 @@ characterRoutes.post('/:id/water', requireAuth, async (c) => {
     const waterId = crypto.randomUUID();
     console.log('Water ID:', waterId);
     
-    const waterInsert = await c.env.DB.prepare(
-      'INSERT INTO waters (id, user_id, character_id) VALUES (?, ?, ?)'
-    )
-      .bind(waterId, userId, characterId)
-      .run();
-    console.log('Water insert result:', waterInsert);
+    try {
+      const waterInsert = await c.env.DB.prepare(
+        'INSERT INTO waters (id, user_id, character_id) VALUES (?, ?, ?)'
+      )
+        .bind(waterId, userId, characterId)
+        .run();
+      console.log('Water insert result:', waterInsert);
+    } catch (dbError: any) {
+      console.log('Database error during water insert:', dbError);
+      
+      // Check if it's a UNIQUE constraint error (rate limiting)
+      if (dbError.message && dbError.message.includes('UNIQUE constraint failed')) {
+        console.log('UNIQUE constraint detected - user hit rate limit');
+        return c.json({ success: false, error: 'You can only water each droplet once per hour' }, 429);
+      }
+      
+      // Re-throw if it's a different database error
+      throw dbError;
+    }
 
     // Update character water count
     console.log('Updating character water count...');
