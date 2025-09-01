@@ -25,6 +25,7 @@ export default function Home() {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [canCreateToday, setCanCreateToday] = useState(true);
   const [showCreationsModal, setShowCreationsModal] = useState(false);
+  const [pendingCharacter, setPendingCharacter] = useState<Character | null>(null);
 
   const fetchWorldState = useCallback(async () => {
     try {
@@ -179,8 +180,14 @@ export default function Home() {
           image_url: result.data.image_url
         };
         
-        // Add to characters display
-        setCharacters(prev => [creationAsCharacter, ...prev]);
+        // First, show a pending animation
+        setPendingCharacter(creationAsCharacter);
+        
+        // Add to characters display with a delay for smooth animation
+        setTimeout(() => {
+          setCharacters(prev => [creationAsCharacter, ...prev]);
+          setPendingCharacter(null);
+        }, 1500); // 1.5 second animation delay
         
         // Show creation details in console for debugging
         console.log('Created droplet:', result.data.traits);
@@ -220,6 +227,7 @@ export default function Home() {
           characters={characters}
           worldState={worldState}
           onCharacterClick={setSelectedCharacter}
+          pendingCharacter={pendingCharacter}
         />
       </div>
 

@@ -11,11 +11,13 @@ interface WorldCanvasProps {
     current_phase: string;
   };
   onCharacterClick: (character: Character) => void;
+  pendingCharacter?: Character | null;
 }
 
-export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldCanvasProps) {
+export function WorldCanvas({ characters, worldState, onCharacterClick, pendingCharacter }: WorldCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
+  const animationStartTime = useRef<number | null>(null);
 
   const drawWorldBackground = useCallback(() => {
     // No background drawing - let the video background show through
@@ -33,7 +35,7 @@ export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldC
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
 
-    const animate = () => {
+    const animate = (timestamp: number) => {
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -45,10 +47,20 @@ export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldC
         drawCharacter(ctx, character);
       });
 
+      // Draw pending character with spawn animation
+      if (pendingCharacter) {
+        if (!animationStartTime.current) {
+          animationStartTime.current = timestamp;
+        }
+        drawPendingCharacter(ctx, pendingCharacter, timestamp);
+      } else {
+        animationStartTime.current = null;
+      }
+
       animationRef.current = requestAnimationFrame(animate);
     };
 
-    animate();
+    animate(0);
 
     return () => {
       if (animationRef.current) {
@@ -153,6 +165,88 @@ export function WorldCanvas({ characters, worldState, onCharacterClick }: WorldC
       ctx.beginPath();
       ctx.arc(x, y, size + 5, 0, Math.PI * 2);
       ctx.stroke();
+    }
+  };
+
+  const drawPendingCharacter = (ctx: CanvasRenderingContext2D, character: Character, timestamp: number) => {
+    if (!animationStartTime.current) return;
+    
+    const elapsed = timestamp - animationStartTime.current;
+    const duration = 1500; // 1.5 seconds
+    const progress = Math.min(elapsed / duration, 1);
+    
+    // Spawn animation: drop from sky with bounce
+    const startY = -50; // Start above screen
+    const endY = character.y;
+    const bounceHeight = 30;
+    
+    // Easing function for bounce
+    let animatedY = startY + (endY - startY) * progress;
+    
+    if (progress > 0.7) {
+      // Add bounce effect in last 30% of animation
+      const bounceProgress = (progress - 0.7) / 0.3;
+      const bounceAmount = bounceHeight * (1 - bounceProgress) * Math.sin(bounceProgress * Math.PI * 3);
+      animatedY += bounceAmount;
+    }
+    
+    // Scale effect: start small, grow to normal size
+    const scale = Math.min(progress * 1.2, 1);
+    
+    // Glow effect during spawn
+    const glowIntensity = Math.sin(elapsed * 0.01) * 0.5 + 0.5;
+    
+    const x = character.x;
+    const baseSize = (40 + character.level * 20) * scale;
+    
+    // Draw glow effect
+    ctx.save();
+    ctx.globalAlpha = glowIntensity * 0.5;
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = character.is_legendary ? '#FFD700' : '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(x, animatedY, baseSize * 1.5, 0, Math.PI * 2);
+    ctx.fillStyle = character.is_legendary ? '#FFD700' : '#FFFFFF';
+    ctx.fill();
+    ctx.restore();
+    
+    // Draw the actual character
+    if (character.image_url) {
+      const cachedImage = imageCache.current.get(character.id);
+      if (cachedImage) {
+        ctx.save();
+        ctx.globalAlpha = progress;
+        ctx.drawImage(
+          cachedImage,
+          x - baseSize / 2,
+          animatedY - baseSize / 2,
+          baseSize,
+          baseSize
+        );
+        ctx.restore();
+      }
+    } else {
+      // Draw fallback dot with animation
+      ctx.save();
+      ctx.globalAlpha = progress;
+      drawFallbackDot(ctx, character, x, animatedY);
+      ctx.restore();
+    }
+    
+    // Sparkle particles around the character
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2 + elapsed * 0.005;
+      const radius = baseSize + 10 + Math.sin(elapsed * 0.01 + i) * 5;
+      const sparkleX = x + Math.cos(angle) * radius;
+      const sparkleY = animatedY + Math.sin(angle) * radius;
+      
+      ctx.save();
+      ctx.globalAlpha = (1 - progress) * glowIntensity;
+      ctx.fillStyle = character.is_legendary ? '#FFD700' : '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(sparkleX, sparkleY, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
   };
 

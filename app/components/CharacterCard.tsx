@@ -16,10 +16,13 @@ interface CharacterCardProps {
 export function CharacterCard({ character, onClose, onRefresh }: CharacterCardProps) {
   const { user } = useAuth();
   
+  // Local character state to handle updates
+  const [currentCharacter, setCurrentCharacter] = useState<Character>(character);
+  
   // Debug logging
   console.log('CharacterCard opened:', {
-    character: character.name,
-    characterId: character.id,
+    character: currentCharacter.name,
+    characterId: currentCharacter.id,
     user: user?.username || 'Not logged in',
     userLoggedIn: !!user
   });
@@ -35,8 +38,8 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
     const fetchLore = async () => {
       setLoadingLore(true);
       try {
-        console.log(`Fetching lore for character: ${character.id}`);
-        const url = getApiUrl(`/api/lore/characters/${character.id}/lore`);
+        console.log(`Fetching lore for character: ${currentCharacter.id}`);
+        const url = getApiUrl(`/api/lore/characters/${currentCharacter.id}/lore`);
         console.log(`Lore API URL: ${url}`);
         
         const response = await fetch(url, {
@@ -66,7 +69,7 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
     if (activeTab === 'lore') {
       fetchLore();
     }
-  }, [activeTab, character.id]);
+  }, [activeTab, currentCharacter.id]);
 
   // Debug existing lore changes
   useEffect(() => {
@@ -105,7 +108,7 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
 
     setIsWatering(true);
     try {
-      const response = await fetch(getApiUrl(`/api/characters/${character.id}/water`), {
+      const response = await fetch(getApiUrl(`/api/characters/${currentCharacter.id}/water`), {
         method: 'POST',
         credentials: 'include',
       });
@@ -120,6 +123,14 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
       if (result.success) {
         // Show success message
         console.log('Successfully watered character!', result.data);
+        
+        // Update local character state immediately for instant feedback
+        setCurrentCharacter(prev => ({
+          ...prev,
+          water_count: result.data.water_count,
+          level: result.data.level
+        }));
+        
         // Trigger immediate refresh of world state and characters
         if (onRefresh) {
           onRefresh();
@@ -137,7 +148,7 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
     if (!user || !loreText.trim() || isSubmittingLore) return;
 
     // Check if user owns this character/creation
-    const isOwner = character.owner_user_id === user.id;
+    const isOwner = currentCharacter.owner_user_id === user.id;
     if (!isOwner) {
       alert('You can only add lore to your own creations');
       return;
@@ -145,7 +156,7 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
 
     setIsSubmittingLore(true);
     try {
-      const response = await fetch(getApiUrl(`/api/lore/characters/${character.id}/lore`), {
+      const response = await fetch(getApiUrl(`/api/lore/characters/${currentCharacter.id}/lore`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ body: loreText }),
@@ -164,7 +175,7 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
         const fetchLore = async () => {
           setLoadingLore(true);
           try {
-            const response = await fetch(getApiUrl(`/api/lore/characters/${character.id}/lore`), {
+            const response = await fetch(getApiUrl(`/api/lore/characters/${currentCharacter.id}/lore`), {
               credentials: 'include',
             });
 
@@ -194,9 +205,9 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
 
   const evolutionProgress = () => {
     const thresholds = [0, 3, 10, 25, 50];
-    const currentThreshold = thresholds[character.level - 1];
-    const nextThreshold = thresholds[character.level] || 50;
-    const progress = ((character.water_count - currentThreshold) / (nextThreshold - currentThreshold)) * 100;
+    const currentThreshold = thresholds[currentCharacter.level - 1];
+    const nextThreshold = thresholds[currentCharacter.level] || 50;
+    const progress = ((currentCharacter.water_count - currentThreshold) / (nextThreshold - currentThreshold)) * 100;
     return Math.min(progress, 100);
   };
 
@@ -225,11 +236,11 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
           <div className="flex justify-between items-start mb-4">
             <div>
               <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                {character.name}
-                {character.is_legendary && <span className="text-yellow-400">👑</span>}
+                {currentCharacter.name}
+                {currentCharacter.is_legendary && <span className="text-yellow-400">👑</span>}
               </h2>
               <p className="text-white/60 text-sm">
-                Owned by {shortenAddress(character.wallet_address)}
+                Owned by {shortenAddress(currentCharacter.wallet_address)}
               </p>
             </div>
             <button
@@ -271,15 +282,15 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
               <div className="bg-black/30 rounded-lg p-4 space-y-3">
                 <div className="flex justify-between">
                   <span className="text-white/60">Level</span>
-                  <span className="text-white font-bold">{character.level}</span>
+                  <span className="text-white font-bold">{currentCharacter.level}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-white/60">Waters</span>
-                  <span className="text-white font-bold">{character.water_count}</span>
+                  <span className="text-white font-bold">{currentCharacter.water_count}</span>
                 </div>
                 
                 {/* Evolution Progress */}
-                {character.level < 5 && (
+                {currentCharacter.level < 5 && (
                   <div>
                     <div className="flex justify-between mb-1">
                       <span className="text-white/60 text-sm">Evolution Progress</span>
@@ -315,7 +326,7 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
           ) : (
             <div className="space-y-4">
               {/* Lore Submission - Only show for owner */}
-              {user && character.owner_user_id === user.id && (
+              {user && currentCharacter.owner_user_id === user.id && (
                 <div className="space-y-2">
                   <textarea
                     value={loreText}
