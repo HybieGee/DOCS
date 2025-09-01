@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Character } from '@/lib/types';
 import { getApiUrl } from '@/lib/utils/api';
 
@@ -21,9 +21,9 @@ export function CreationsModal({ isOpen, onClose, userId }: CreationsModalProps)
     if (isOpen && userId) {
       fetchUserCreations();
     }
-  }, [isOpen, userId]);
+  }, [isOpen, userId, fetchUserCreations]);
 
-  const fetchUserCreations = async () => {
+  const fetchUserCreations = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(getApiUrl('/api/characters'), {
@@ -43,7 +43,7 @@ export function CreationsModal({ isOpen, onClose, userId }: CreationsModalProps)
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
   const handleEditClick = (creation: Character) => {
     setEditingCreation(creation.id);

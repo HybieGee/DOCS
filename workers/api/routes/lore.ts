@@ -243,7 +243,7 @@ loreRoutes.delete('/:id/like', async (c) => {
       'DELETE FROM lore_likes WHERE lore_id = ? AND user_id = ?'
     ).bind(loreId, userId).run();
 
-    if (result.changes === 0) {
+    if (!result.success) {
       return c.json({ success: false, error: 'Like not found' }, 404);
     }
 

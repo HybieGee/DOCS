@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/app/hooks/useAuth';
 import type { Character } from '@/lib/types';
@@ -26,9 +26,9 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
     if (activeTab === 'lore') {
       fetchLore();
     }
-  }, [activeTab]);
+  }, [activeTab, fetchLore]);
 
-  const fetchLore = async () => {
+  const fetchLore = useCallback(async () => {
     setLoadingLore(true);
     try {
       const response = await fetch(getApiUrl(`/api/lore/characters/${character.id}/lore`), {
@@ -48,7 +48,7 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
     } finally {
       setLoadingLore(false);
     }
-  };
+  }, [character.id]);
 
   const handleLikeLore = async (loreId: string, currentlyLiked: boolean) => {
     if (!user) return;
