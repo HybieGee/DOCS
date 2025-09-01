@@ -150,7 +150,13 @@ authRoutes.post('/logout', async (c) => {
       .run();
   }
 
-  deleteCookie(c, 'session');
+  // Clear the cookie with the same settings used to set it
+  deleteCookie(c, 'session', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'None',
+  });
+  
   return c.json({ success: true });
 });
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getCookie, setCookie, deleteCookie } from 'cookies-next';
 import type { User, SignupRequest, LoginRequest } from '@/lib/types';
 import { getApiUrl } from '@/lib/utils/api';
 
@@ -26,16 +25,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const token = getCookie('session');
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
       const response = await fetch(getApiUrl('/api/auth/me'), {
-        headers: {
-          'Cookie': `session=${token}`,
-        },
+        credentials: 'include', // This will automatically send cookies
       });
 
       if (response.ok) {
@@ -64,11 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const result = await response.json();
     setUser(result.data.user);
-    setCookie('session', result.data.token, {
-      maxAge: 7 * 24 * 60 * 60,
-      sameSite: 'none',
-      secure: true, // Always secure for cross-origin
-    });
+    // Cookie is already set by the server with httpOnly flag
   };
 
   const signup = async (data: SignupRequest) => {
@@ -86,11 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const result = await response.json();
     setUser(result.data.user);
-    setCookie('session', result.data.token, {
-      maxAge: 7 * 24 * 60 * 60,
-      sameSite: 'none',
-      secure: true, // Always secure for cross-origin
-    });
+    // Cookie is already set by the server with httpOnly flag
   };
 
   const logout = async () => {
@@ -99,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       credentials: 'include',
     });
     setUser(null);
-    deleteCookie('session');
+    // Cookie is cleared by the server
   };
 
   const verifyWallet = async (data: { signed_message: string; signature: string }) => {
