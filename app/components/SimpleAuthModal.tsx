@@ -71,7 +71,7 @@ export function SimpleAuthModal({ isOpen, onClose, defaultTab = 'login' }: Simpl
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
         onClick={(e) => {
           if (e.target === e.currentTarget) {
             onClose();
@@ -82,40 +82,40 @@ export function SimpleAuthModal({ isOpen, onClose, defaultTab = 'login' }: Simpl
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 max-w-md w-full border border-white/10"
+          className="bg-black border-2 border-white p-6 max-w-md w-full"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-white">
-              {activeTab === 'login' ? 'Welcome Back' : 'Join the World'}
+          <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-white">
+            <h2 className="text-xl font-bold text-white uppercase tracking-wider">
+              Welcome Back
             </h2>
             <button
               onClick={onClose}
-              className="text-white/60 hover:text-white transition-colors text-xl"
+              className="text-white hover:text-white/70 transition-colors text-2xl font-bold"
             >
               ×
             </button>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-6">
+          <div className="flex mb-6 border-b-2 border-white">
             <button
               onClick={() => setActiveTab('login')}
-              className={`flex-1 py-2 px-4 rounded-lg transition-all ${
+              className={`flex-1 py-3 px-4 transition-all text-sm font-semibold uppercase tracking-wider ${
                 activeTab === 'login'
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                  : 'text-white/60 hover:text-white hover:bg-white/10'
+                  ? 'bg-white text-black'
+                  : 'text-white hover:bg-white/10'
               }`}
             >
               Login
             </button>
             <button
               onClick={() => setActiveTab('signup')}
-              className={`flex-1 py-2 px-4 rounded-lg transition-all ${
+              className={`flex-1 py-3 px-4 transition-all text-sm font-semibold uppercase tracking-wider ${
                 activeTab === 'signup'
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                  : 'text-white/60 hover:text-white hover:bg-white/10'
+                  ? 'bg-white text-black'
+                  : 'text-white hover:bg-white/10'
               }`}
             >
               Sign Up
@@ -124,23 +124,23 @@ export function SimpleAuthModal({ isOpen, onClose, defaultTab = 'login' }: Simpl
 
           {/* Error */}
           {error && (
-            <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 mb-6">
-              <p className="text-red-400 text-sm">{error}</p>
+            <div className="border-2 border-red-500 bg-black p-3 mb-6">
+              <p className="text-red-500 text-sm uppercase">{error}</p>
             </div>
           )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-white/80 text-sm font-medium mb-2">
+              <label className="block text-white text-xs font-bold uppercase tracking-wider mb-2">
                 Username
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-blue-500 transition-colors"
-                placeholder="Enter your username"
+                className="w-full px-4 py-3 bg-black border-2 border-white text-white placeholder-white/40 focus:outline-none focus:border-white transition-colors"
+                placeholder="Test"
                 required
                 minLength={3}
                 maxLength={20}
@@ -148,15 +148,15 @@ export function SimpleAuthModal({ isOpen, onClose, defaultTab = 'login' }: Simpl
             </div>
 
             <div>
-              <label className="block text-white/80 text-sm font-medium mb-2">
+              <label className="block text-white text-xs font-bold uppercase tracking-wider mb-2">
                 Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-blue-500 transition-colors"
-                placeholder="Enter your password"
+                className="w-full px-4 py-3 bg-black border-2 border-white text-white placeholder-white/40 focus:outline-none focus:border-white transition-colors"
+                placeholder="••••••••"
                 required
                 minLength={6}
               />
@@ -164,19 +164,19 @@ export function SimpleAuthModal({ isOpen, onClose, defaultTab = 'login' }: Simpl
 
             {activeTab === 'signup' && (
               <div>
-                <label className="block text-white/80 text-sm font-medium mb-2">
+                <label className="block text-white text-xs font-bold uppercase tracking-wider mb-2">
                   Solana Address
                 </label>
                 <input
                   type="text"
                   value={solanaAddress}
                   onChange={(e) => setSolanaAddress(e.target.value)}
-                  className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-blue-500 transition-colors font-mono text-sm"
-                  placeholder="Enter your Solana wallet address"
+                  className="w-full px-4 py-3 bg-black border-2 border-white text-white placeholder-white/40 focus:outline-none focus:border-white transition-colors font-mono text-sm"
+                  placeholder="Your Solana wallet address"
                   required
                 />
-                <p className="text-blue-400 text-xs mt-2">
-                  💡 This should be your Solana wallet address (starts with a letter/number, 32-44 characters long)
+                <p className="text-white/60 text-xs mt-2">
+                  Must be a valid Solana wallet address (32-44 characters)
                 </p>
               </div>
             )}
@@ -184,26 +184,26 @@ export function SimpleAuthModal({ isOpen, onClose, defaultTab = 'login' }: Simpl
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-black text-white font-bold uppercase tracking-wider transition-all border-2 border-white hover:bg-white hover:text-black disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading
                 ? 'Please wait...'
                 : activeTab === 'login'
                 ? 'Login'
-                : 'Create Account'
+                : 'Sign Up'
               }
             </button>
           </form>
 
           {/* Footer */}
-          <div className="mt-6 text-center">
+          <div className="mt-6 pt-4 border-t-2 border-white text-center">
             <p className="text-white/60 text-sm">
               {activeTab === 'login' ? "Don't have an account? " : 'Already have an account? '}
               <button
                 onClick={() => setActiveTab(activeTab === 'login' ? 'signup' : 'login')}
-                className="text-blue-400 hover:text-blue-300 transition-colors"
+                className="text-white underline hover:text-white/80 transition-colors"
               >
-                {activeTab === 'login' ? 'Sign up' : 'Login'}
+                {activeTab === 'login' ? 'Sign Up' : 'Login'}
               </button>
             </p>
           </div>
