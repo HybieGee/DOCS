@@ -73,7 +73,8 @@ export function SimpleAuthModal({ isOpen, onClose, defaultTab = 'login' }: Simpl
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
         onClick={(e) => {
-          if (e.target === e.currentTarget) {
+          // Only close if it's a clean click (not a drag/text selection)
+          if (e.target === e.currentTarget && !window.getSelection()?.toString()) {
             onClose();
           }
         }}

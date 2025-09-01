@@ -207,7 +207,12 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-        onClick={onClose}
+        onClick={(e) => {
+          // Only close if it's a clean click (not a drag/text selection)
+          if (e.target === e.currentTarget && !window.getSelection()?.toString()) {
+            onClose();
+          }
+        }}
       >
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
