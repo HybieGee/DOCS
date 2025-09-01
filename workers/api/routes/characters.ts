@@ -150,17 +150,29 @@ characterRoutes.post('/:id/water', requireAuth, async (c) => {
       return c.json({ success: false, error: 'Character not found' }, 404);
     }
 
-    // Check if already watered today
-    const today = new Date().toISOString().split('T')[0];
+    // Check hourly rate limit (3 waters per hour)
+    const currentHour = new Date().toISOString().substring(0, 13); // YYYY-MM-DDTHH
+    const hourlyWaterCount = await c.env.DB.prepare(
+      `SELECT COUNT(*) as count FROM waters 
+       WHERE user_id = ? AND strftime('%Y-%m-%dT%H', created_at) = ?`
+    )
+      .bind(userId, currentHour)
+      .first<{ count: number }>();
+
+    if (hourlyWaterCount && hourlyWaterCount.count >= 3) {
+      return c.json({ success: false, error: 'You can only water 3 droplets per hour. Please wait.' }, 429);
+    }
+
+    // Check if already watered this specific character in the current hour
     const existingWater = await c.env.DB.prepare(
       `SELECT id FROM waters 
-       WHERE user_id = ? AND character_id = ? AND date(created_at) = ?`
+       WHERE user_id = ? AND character_id = ? AND strftime('%Y-%m-%dT%H', created_at) = ?`
     )
-      .bind(userId, characterId, today)
+      .bind(userId, characterId, currentHour)
       .first();
 
     if (existingWater) {
-      return c.json({ success: false, error: 'Already watered today' }, 429);
+      return c.json({ success: false, error: 'You can only water each droplet once per hour' }, 429);
     }
 
     // Create water record

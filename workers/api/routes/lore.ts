@@ -107,13 +107,37 @@ loreRoutes.get('/characters/:id/lore', async (c) => {
   try {
     const characterId = c.req.param('id');
     
-    const loreEntries = await c.env.DB.prepare(
-      `SELECT * FROM lore 
-       WHERE character_id = ? 
-       ORDER BY created_at DESC 
-       LIMIT 50`
-    )
-      .bind(characterId)
+    // Get user ID for like status
+    let userId: string | null = null;
+    try {
+      const token = getCookie(c, 'session');
+      if (token) {
+        const payload = await verifyJWT(token, c.env.JWT_SECRET);
+        if (payload) {
+          userId = payload.sub;
+        }
+      }
+    } catch (error) {
+      // Continue without user ID if not authenticated
+    }
+    
+    // Get lore entries with like counts and user's like status
+    const loreQuery = `
+      SELECT 
+        l.*,
+        COUNT(ll.id) as likes_count,
+        ${userId ? `MAX(CASE WHEN ll.user_id = ? THEN 1 ELSE 0 END) as user_liked` : '0 as user_liked'}
+      FROM lore l
+      LEFT JOIN lore_likes ll ON l.id = ll.lore_id
+      WHERE l.character_id = ?
+      GROUP BY l.id
+      ORDER BY l.created_at DESC 
+      LIMIT 50
+    `;
+    
+    const bindings = userId ? [userId, characterId] : [characterId];
+    const loreEntries = await c.env.DB.prepare(loreQuery)
+      .bind(...bindings)
       .all();
 
     return c.json({ 
@@ -123,5 +147,120 @@ loreRoutes.get('/characters/:id/lore', async (c) => {
   } catch (error) {
     console.error('Get lore error:', error);
     return c.json({ success: false, error: 'Failed to get lore' }, 500);
+  }
+});
+
+// POST /api/lore/:id/like - Like a lore post
+loreRoutes.post('/:id/like', async (c) => {
+  try {
+    // Get user info
+    let userId: string | null = null;
+    try {
+      const token = getCookie(c, 'session');
+      if (token) {
+        const payload = await verifyJWT(token, c.env.JWT_SECRET);
+        if (payload) {
+          userId = payload.sub;
+        }
+      }
+    } catch (error) {
+      return c.json({ success: false, error: 'Not authenticated' }, 401);
+    }
+
+    if (!userId) {
+      return c.json({ success: false, error: 'Must be logged in' }, 401);
+    }
+
+    const loreId = c.req.param('id');
+    
+    // Check if lore exists
+    const lore = await c.env.DB.prepare(
+      'SELECT id FROM lore WHERE id = ?'
+    ).bind(loreId).first();
+
+    if (!lore) {
+      return c.json({ success: false, error: 'Lore not found' }, 404);
+    }
+
+    // Check if user already liked this lore
+    const existingLike = await c.env.DB.prepare(
+      'SELECT id FROM lore_likes WHERE lore_id = ? AND user_id = ?'
+    ).bind(loreId, userId).first();
+
+    if (existingLike) {
+      return c.json({ success: false, error: 'Already liked this lore' }, 400);
+    }
+
+    // Add like
+    const likeId = `like_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    await c.env.DB.prepare(
+      'INSERT INTO lore_likes (id, lore_id, user_id) VALUES (?, ?, ?)'
+    ).bind(likeId, loreId, userId).run();
+
+    // Get new like count
+    const likeCount = await c.env.DB.prepare(
+      'SELECT COUNT(*) as count FROM lore_likes WHERE lore_id = ?'
+    ).bind(loreId).first();
+
+    return c.json({ 
+      success: true, 
+      data: { 
+        liked: true,
+        likes_count: likeCount?.count || 0
+      }
+    });
+  } catch (error) {
+    console.error('Like lore error:', error);
+    return c.json({ success: false, error: 'Failed to like lore' }, 500);
+  }
+});
+
+// DELETE /api/lore/:id/like - Unlike a lore post
+loreRoutes.delete('/:id/like', async (c) => {
+  try {
+    // Get user info
+    let userId: string | null = null;
+    try {
+      const token = getCookie(c, 'session');
+      if (token) {
+        const payload = await verifyJWT(token, c.env.JWT_SECRET);
+        if (payload) {
+          userId = payload.sub;
+        }
+      }
+    } catch (error) {
+      return c.json({ success: false, error: 'Not authenticated' }, 401);
+    }
+
+    if (!userId) {
+      return c.json({ success: false, error: 'Must be logged in' }, 401);
+    }
+
+    const loreId = c.req.param('id');
+
+    // Remove like
+    const result = await c.env.DB.prepare(
+      'DELETE FROM lore_likes WHERE lore_id = ? AND user_id = ?'
+    ).bind(loreId, userId).run();
+
+    if (result.changes === 0) {
+      return c.json({ success: false, error: 'Like not found' }, 404);
+    }
+
+    // Get new like count
+    const likeCount = await c.env.DB.prepare(
+      'SELECT COUNT(*) as count FROM lore_likes WHERE lore_id = ?'
+    ).bind(loreId).first();
+
+    return c.json({ 
+      success: true, 
+      data: { 
+        liked: false,
+        likes_count: likeCount?.count || 0
+      }
+    });
+  } catch (error) {
+    console.error('Unlike lore error:', error);
+    return c.json({ success: false, error: 'Failed to unlike lore' }, 500);
   }
 });
