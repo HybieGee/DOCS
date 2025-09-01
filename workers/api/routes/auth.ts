@@ -154,7 +154,37 @@ authRoutes.post('/logout', async (c) => {
   return c.json({ success: true });
 });
 
-// Get current user\nauthRoutes.get('/me', async (c) => {\n  try {\n    const token = getCookie(c, 'session');\n    if (!token) {\n      return c.json({ success: false, error: 'Unauthorized' }, 401);\n    }\n\n    const payload = await verifyJWT(token, c.env.JWT_SECRET);\n    if (!payload) {\n      return c.json({ success: false, error: 'Unauthorized' }, 401);\n    }\n\n    const user = await c.env.DB.prepare(\n      'SELECT id, username, solana_address, created_at, updated_at FROM users WHERE id = ?'\n    )\n      .bind(payload.sub)\n      .first<User>();\n\n    if (!user) {\n      return c.json({ success: false, error: 'User not found' }, 404);\n    }\n\n    return c.json({ success: true, data: { user } });\n  } catch (error) {\n    console.error('Get me error:', error);\n    return c.json({ success: false, error: 'Internal server error' }, 500);\n  }\n});\n\n// Verify wallet
+// Get current user
+authRoutes.get('/me', async (c) => {
+  try {
+    const token = getCookie(c, 'session');
+    if (!token) {
+      return c.json({ success: false, error: 'Unauthorized' }, 401);
+    }
+
+    const payload = await verifyJWT(token, c.env.JWT_SECRET);
+    if (!payload) {
+      return c.json({ success: false, error: 'Unauthorized' }, 401);
+    }
+
+    const user = await c.env.DB.prepare(
+      'SELECT id, username, solana_address, created_at, updated_at FROM users WHERE id = ?'
+    )
+      .bind(payload.sub)
+      .first<User>();
+
+    if (!user) {
+      return c.json({ success: false, error: 'User not found' }, 404);
+    }
+
+    return c.json({ success: true, data: { user } });
+  } catch (error) {
+    console.error('Get me error:', error);
+    return c.json({ success: false, error: 'Internal server error' }, 500);
+  }
+});
+
+// Verify wallet
 authRoutes.post('/wallet/verify', async (c) => {
   try {
     const token = getCookie(c, 'session');
