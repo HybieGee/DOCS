@@ -82,7 +82,7 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
 
     setIsWatering(true);
     try {
-      const response = await fetch(`/api/characters/${character.id}/water`, {
+      const response = await fetch(getApiUrl(`/api/characters/${character.id}/water`), {
         method: 'POST',
         credentials: 'include',
       });
@@ -92,10 +92,16 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
         throw new Error(error.error || 'Failed to water character');
       }
 
-      await response.json();
-      // Update will come through realtime
+      const result = await response.json();
+      
+      if (result.success) {
+        // Show success message
+        console.log('Successfully watered character!', result.data);
+        // The character data will be updated through the parent component
+      }
     } catch (error) {
       console.error('Water error:', error);
+      alert(error instanceof Error ? error.message : 'Failed to water character');
     } finally {
       setIsWatering(false);
     }
