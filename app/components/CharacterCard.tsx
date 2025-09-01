@@ -35,15 +35,24 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
     const fetchLore = async () => {
       setLoadingLore(true);
       try {
-        const response = await fetch(getApiUrl(`/api/lore/characters/${character.id}/lore`), {
+        console.log(`Fetching lore for character: ${character.id}`);
+        const url = getApiUrl(`/api/lore/characters/${character.id}/lore`);
+        console.log(`Lore API URL: ${url}`);
+        
+        const response = await fetch(url, {
           credentials: 'include',
         });
 
+        console.log(`Lore API response status: ${response.status}`);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log(`Lore API response data:`, data);
           setExistingLore(data.data || []);
         } else {
-          console.error('Failed to fetch lore');
+          console.error('Failed to fetch lore, status:', response.status);
+          const errorText = await response.text();
+          console.error('Lore error response:', errorText);
           setExistingLore([]);
         }
       } catch (error) {
@@ -58,6 +67,11 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
       fetchLore();
     }
   }, [activeTab, character.id]);
+
+  // Debug existing lore changes
+  useEffect(() => {
+    console.log('ExistingLore state changed:', existingLore, 'Length:', existingLore.length);
+  }, [existingLore]);
 
   const handleLikeLore = async (loreId: string, currentlyLiked: boolean) => {
     if (!user) return;
@@ -325,7 +339,9 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
                   <p className="text-white/60 text-center">Loading lore...</p>
                 ) : existingLore.length > 0 ? (
                   <div className="space-y-3">
-                    {existingLore.map((lore) => (
+                    {existingLore.map((lore) => {
+                      console.log('Rendering lore item:', lore);
+                      return (
                       <div key={lore.id} className="border-b border-white/10 pb-3 last:border-b-0">
                         <p className="text-white text-sm mb-2">{lore.body}</p>
                         <div className="flex items-center justify-between">
@@ -355,7 +371,8 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
                           )}
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-white/60 text-center">No lore yet. Be the first to write!</p>
