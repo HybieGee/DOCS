@@ -136,22 +136,29 @@ characterRoutes.post('/mint', requireAuth, async (c) => {
 // Water a character
 characterRoutes.post('/:id/water', requireAuth, async (c) => {
   try {
+    console.log('=== WATERING DEBUG START ===');
     const userId = c.get('userId' as never) as string;
-    const characterId = (c as any).param('id');
+    const characterId = c.req.param('id');
+    console.log('User ID:', userId);
+    console.log('Character ID:', characterId);
 
     // Check if character exists
+    console.log('Checking if character exists...');
     const character = await c.env.DB.prepare(
       'SELECT * FROM characters WHERE id = ?'
     )
       .bind(characterId)
       .first<Character>();
 
+    console.log('Character found:', character ? 'YES' : 'NO');
     if (!character) {
       return c.json({ success: false, error: 'Character not found' }, 404);
     }
 
     // Simplified rate limiting - check recent waters (past hour)
+    console.log('Checking rate limits...');
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    console.log('One hour ago timestamp:', oneHourAgo);
     
     const recentWaterCount = await c.env.DB.prepare(
       `SELECT COUNT(*) as count FROM waters 
@@ -160,11 +167,13 @@ characterRoutes.post('/:id/water', requireAuth, async (c) => {
       .bind(userId, oneHourAgo)
       .first<{ count: number }>();
 
+    console.log('Recent water count:', recentWaterCount);
     if (recentWaterCount && recentWaterCount.count >= 3) {
       return c.json({ success: false, error: 'You can only water 3 droplets per hour. Please wait.' }, 429);
     }
 
     // Check if already watered this specific character in the past hour
+    console.log('Checking if character already watered...');
     const existingWater = await c.env.DB.prepare(
       `SELECT id FROM waters 
        WHERE user_id = ? AND character_id = ? AND created_at >= ?`
@@ -172,23 +181,31 @@ characterRoutes.post('/:id/water', requireAuth, async (c) => {
       .bind(userId, characterId, oneHourAgo)
       .first();
 
+    console.log('Existing water:', existingWater ? 'YES' : 'NO');
     if (existingWater) {
       return c.json({ success: false, error: 'You can only water each droplet once per hour' }, 429);
     }
 
     // Create water record
+    console.log('Creating water record...');
     const waterId = crypto.randomUUID();
-    await c.env.DB.prepare(
+    console.log('Water ID:', waterId);
+    
+    const waterInsert = await c.env.DB.prepare(
       'INSERT INTO waters (id, user_id, character_id) VALUES (?, ?, ?)'
     )
       .bind(waterId, userId, characterId)
       .run();
+    console.log('Water insert result:', waterInsert);
 
     // Update character water count
+    console.log('Updating character water count...');
     const newWaterCount = character.water_count + 1;
     let newLevel = character.level;
+    console.log('Current level:', character.level, 'New water count:', newWaterCount);
 
     // Check for level up
+    console.log('Checking evolution thresholds:', EVOLUTION_THRESHOLDS);
     if (newWaterCount >= EVOLUTION_THRESHOLDS.level5 && character.level < 5) {
       newLevel = 5;
     } else if (newWaterCount >= EVOLUTION_THRESHOLDS.level4 && character.level < 4) {
@@ -198,22 +215,26 @@ characterRoutes.post('/:id/water', requireAuth, async (c) => {
     } else if (newWaterCount >= EVOLUTION_THRESHOLDS.level2 && character.level < 2) {
       newLevel = 2;
     }
+    console.log('New level will be:', newLevel);
 
-    await c.env.DB.prepare(
+    const characterUpdate = await c.env.DB.prepare(
       `UPDATE characters SET 
        water_count = ?, level = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`
     )
       .bind(newWaterCount, newLevel, characterId)
       .run();
+    console.log('Character update result:', characterUpdate);
 
     // Update world state
-    await c.env.DB.prepare(
+    console.log('Updating world state...');
+    const worldUpdate = await c.env.DB.prepare(
       `UPDATE world_state SET 
        total_waters = total_waters + 1,
        updated_at = CURRENT_TIMESTAMP
        WHERE id = 1`
     ).run();
+    console.log('World state update result:', worldUpdate);
 
     // Broadcast water event (disabled - Durable Objects not configured)
     // const worldId = (c.env as any).WORLD.idFromName('world-room');
@@ -231,6 +252,7 @@ characterRoutes.post('/:id/water', requireAuth, async (c) => {
     //   }),
     // });
 
+    console.log('=== WATERING SUCCESS ===');
     return c.json({
       success: true,
       data: {
@@ -240,8 +262,11 @@ characterRoutes.post('/:id/water', requireAuth, async (c) => {
       },
     });
   } catch (error) {
-    console.error('Water error:', error);
-    return c.json({ success: false, error: 'Failed to water character' }, 500);
+    console.error('=== WATERING ERROR ===');
+    console.error('Full error details:', error);
+    console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
+    return c.json({ success: false, error: `Failed to water character: ${error instanceof Error ? error.message : 'Unknown error'}` }, 500);
   }
 });
 
