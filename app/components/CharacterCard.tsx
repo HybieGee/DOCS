@@ -10,9 +10,10 @@ import { getApiUrl } from '@/lib/utils/api';
 interface CharacterCardProps {
   character: Character;
   onClose: () => void;
+  onRefresh?: () => void;
 }
 
-export function CharacterCard({ character, onClose }: CharacterCardProps) {
+export function CharacterCard({ character, onClose, onRefresh }: CharacterCardProps) {
   const { user } = useAuth();
   
   // Debug logging
@@ -105,7 +106,10 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
       if (result.success) {
         // Show success message
         console.log('Successfully watered character!', result.data);
-        // The character data will be updated through the parent component
+        // Trigger immediate refresh of world state and characters
+        if (onRefresh) {
+          onRefresh();
+        }
       }
     } catch (error) {
       console.error('Water error:', error);

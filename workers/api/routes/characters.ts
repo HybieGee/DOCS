@@ -99,6 +99,11 @@ characterRoutes.post('/mint', requireAuth, async (c) => {
     ).run();
     console.log('World state updated successfully');
 
+    // Clear world state cache to ensure live updates
+    console.log('Clearing world state cache...');
+    await c.env.CACHE.delete('world_state');
+    console.log('World state cache cleared');
+
     const character: Character = {
       id: characterId,
       owner_user_id: userId,
@@ -248,6 +253,11 @@ characterRoutes.post('/:id/water', requireAuth, async (c) => {
        WHERE id = 1`
     ).run();
     console.log('World state update result:', worldUpdate);
+
+    // Clear world state cache to ensure live updates
+    console.log('Clearing world state cache...');
+    await c.env.CACHE.delete('world_state');
+    console.log('World state cache cleared');
 
     // Broadcast water event (disabled - Durable Objects not configured)
     // const worldId = (c.env as any).WORLD.idFromName('world-room');

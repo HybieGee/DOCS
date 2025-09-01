@@ -60,6 +60,12 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [fetchWorldState, fetchCharacters]);
 
+  // Refresh function to call after actions
+  const handleRefresh = useCallback(async () => {
+    await fetchWorldState();
+    await fetchCharacters();
+  }, [fetchWorldState, fetchCharacters]);
+
   const handleRealtimeMessage = useCallback((message: { type: string; payload: Record<string, unknown> }) => {
     switch (message.type) {
       case 'character_spawn':
@@ -335,6 +341,7 @@ export default function Home() {
         <CharacterCard
           character={selectedCharacter}
           onClose={() => setSelectedCharacter(null)}
+          onRefresh={handleRefresh}
         />
       )}
 
