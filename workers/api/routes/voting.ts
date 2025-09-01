@@ -141,10 +141,12 @@ votingRoutes.get('/stats', async (c) => {
       
       // Top rated entries (quality score >= 75)
       c.env.DB.prepare(`
-        SELECT COUNT(DISTINCT l.id) as count FROM lore l
-        LEFT JOIN lore_votes v ON l.id = v.lore_id
-        GROUP BY l.id
-        HAVING AVG(CASE WHEN v.vote_type = 'up' THEN 100 WHEN v.vote_type = 'down' THEN 0 ELSE 50 END) >= 75
+        SELECT COUNT(*) as count FROM (
+          SELECT l.id FROM lore l
+          LEFT JOIN lore_votes v ON l.id = v.lore_id
+          GROUP BY l.id
+          HAVING AVG(CASE WHEN v.vote_type = 'up' THEN 100 WHEN v.vote_type = 'down' THEN 0 ELSE 50 END) >= 75
+        )
       `).first<{ count: number }>(),
       
       // User's votes cast
