@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/app/hooks/useAuth';
 import type { Character } from '@/lib/types';
@@ -23,32 +23,32 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
 
   // Fetch existing lore when component mounts or when lore tab is selected
   useEffect(() => {
+    const fetchLore = async () => {
+      setLoadingLore(true);
+      try {
+        const response = await fetch(getApiUrl(`/api/lore/characters/${character.id}/lore`), {
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setExistingLore(data.data || []);
+        } else {
+          console.error('Failed to fetch lore');
+          setExistingLore([]);
+        }
+      } catch (error) {
+        console.error('Error fetching lore:', error);
+        setExistingLore([]);
+      } finally {
+        setLoadingLore(false);
+      }
+    };
+
     if (activeTab === 'lore') {
       fetchLore();
     }
-  }, [activeTab, fetchLore]);
-
-  const fetchLore = useCallback(async () => {
-    setLoadingLore(true);
-    try {
-      const response = await fetch(getApiUrl(`/api/lore/characters/${character.id}/lore`), {
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setExistingLore(data.data || []);
-      } else {
-        console.error('Failed to fetch lore');
-        setExistingLore([]);
-      }
-    } catch (error) {
-      console.error('Error fetching lore:', error);
-      setExistingLore([]);
-    } finally {
-      setLoadingLore(false);
-    }
-  }, [character.id]);
+  }, [activeTab, character.id]);
 
   const handleLikeLore = async (loreId: string, currentlyLiked: boolean) => {
     if (!user) return;
@@ -127,8 +127,31 @@ export function CharacterCard({ character, onClose }: CharacterCardProps) {
 
       setLoreText('');
       alert('Lore added successfully!');
-      // Refresh lore list
-      await fetchLore();
+      // Refresh lore list by refetching
+      if (activeTab === 'lore') {
+        const fetchLore = async () => {
+          setLoadingLore(true);
+          try {
+            const response = await fetch(getApiUrl(`/api/lore/characters/${character.id}/lore`), {
+              credentials: 'include',
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              setExistingLore(data.data || []);
+            } else {
+              console.error('Failed to fetch lore');
+              setExistingLore([]);
+            }
+          } catch (error) {
+            console.error('Error fetching lore:', error);
+            setExistingLore([]);
+          } finally {
+            setLoadingLore(false);
+          }
+        };
+        await fetchLore();
+      }
     } catch (error) {
       console.error('Lore submission error:', error);
       alert(error instanceof Error ? error.message : 'Failed to add lore');

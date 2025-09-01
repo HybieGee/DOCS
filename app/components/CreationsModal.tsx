@@ -17,12 +17,6 @@ export function CreationsModal({ isOpen, onClose, userId }: CreationsModalProps)
   const [editName, setEditName] = useState('');
   const [editLore, setEditLore] = useState('');
 
-  useEffect(() => {
-    if (isOpen && userId) {
-      fetchUserCreations();
-    }
-  }, [isOpen, userId, fetchUserCreations]);
-
   const fetchUserCreations = useCallback(async () => {
     try {
       setLoading(true);
@@ -44,6 +38,12 @@ export function CreationsModal({ isOpen, onClose, userId }: CreationsModalProps)
       setLoading(false);
     }
   }, [userId]);
+
+  useEffect(() => {
+    if (isOpen && userId) {
+      fetchUserCreations();
+    }
+  }, [isOpen, userId, fetchUserCreations]);
 
   const handleEditClick = (creation: Character) => {
     setEditingCreation(creation.id);
