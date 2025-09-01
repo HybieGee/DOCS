@@ -2,8 +2,8 @@ import { Hono } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { verifyJWT } from '@/lib/auth/jwt';
 import type { Env } from '../index';
-import type { Character, Water } from '@/lib/types';
-import { LEGENDARY_CHANCE, EVOLUTION_THRESHOLDS, MINTS_PER_DAY_LIMIT } from '@/lib/types';
+import type { Character, Water } from '@/lib/types/index';
+import { LEGENDARY_CHANCE, EVOLUTION_THRESHOLDS, MINTS_PER_DAY_LIMIT } from '@/lib/types/index';
 
 export const characterRoutes = new Hono<{ Bindings: Env }>();
 
@@ -150,25 +150,26 @@ characterRoutes.post('/:id/water', requireAuth, async (c) => {
       return c.json({ success: false, error: 'Character not found' }, 404);
     }
 
-    // Check hourly rate limit (3 waters per hour)
-    const currentHour = new Date().toISOString().substring(0, 13); // YYYY-MM-DDTHH
-    const hourlyWaterCount = await c.env.DB.prepare(
+    // Simplified rate limiting - check recent waters (past hour)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    
+    const recentWaterCount = await c.env.DB.prepare(
       `SELECT COUNT(*) as count FROM waters 
-       WHERE user_id = ? AND strftime('%Y-%m-%dT%H', created_at) = ?`
+       WHERE user_id = ? AND created_at >= ?`
     )
-      .bind(userId, currentHour)
+      .bind(userId, oneHourAgo)
       .first<{ count: number }>();
 
-    if (hourlyWaterCount && hourlyWaterCount.count >= 3) {
+    if (recentWaterCount && recentWaterCount.count >= 3) {
       return c.json({ success: false, error: 'You can only water 3 droplets per hour. Please wait.' }, 429);
     }
 
-    // Check if already watered this specific character in the current hour
+    // Check if already watered this specific character in the past hour
     const existingWater = await c.env.DB.prepare(
       `SELECT id FROM waters 
-       WHERE user_id = ? AND character_id = ? AND strftime('%Y-%m-%dT%H', created_at) = ?`
+       WHERE user_id = ? AND character_id = ? AND created_at >= ?`
     )
-      .bind(userId, characterId, currentHour)
+      .bind(userId, characterId, oneHourAgo)
       .first();
 
     if (existingWater) {
