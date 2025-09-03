@@ -32,8 +32,30 @@ export default function TokensPage() {
   useEffect(() => {
     if (user) {
       fetchTokenData();
-      const interval = setInterval(fetchTokenData, 30000); // Update every 30 seconds
-      return () => clearInterval(interval);
+      
+      // Fetch data every 5 seconds to show real-time updates
+      const fetchInterval = setInterval(fetchTokenData, 5000);
+      
+      // Auto-earn tokens every 30 seconds
+      const earnInterval = setInterval(async () => {
+        try {
+          const response = await fetch(getApiUrl('/api/tokens/auto-earn'), { 
+            method: 'POST',
+            credentials: 'include' 
+          });
+          if (response.ok) {
+            // Refresh token data after earning
+            fetchTokenData();
+          }
+        } catch (error) {
+          console.error('Auto-earn failed:', error);
+        }
+      }, 30000); // Every 30 seconds
+      
+      return () => {
+        clearInterval(fetchInterval);
+        clearInterval(earnInterval);
+      };
     }
   }, [user]);
 

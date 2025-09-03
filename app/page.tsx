@@ -54,13 +54,26 @@ export default function Home() {
 
   // Auto-refresh data every 30 seconds to prevent scrollbar bug
   useEffect(() => {
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       fetchWorldState();
       fetchCharacters();
+      
+      // Auto-earn tokens for logged in users
+      if (user) {
+        try {
+          await fetch(getApiUrl('/api/tokens/auto-earn'), { 
+            method: 'POST',
+            credentials: 'include' 
+          });
+        } catch (error) {
+          // Silent fail for auto-earning - don't disturb gameplay
+          console.error('Auto-earn failed:', error);
+        }
+      }
     }, 30000); // Refresh every 30 seconds
 
     return () => clearInterval(interval);
-  }, [fetchWorldState, fetchCharacters]);
+  }, [fetchWorldState, fetchCharacters, user]);
 
   // Refresh function to call after actions
   const handleRefresh = useCallback(async () => {

@@ -318,3 +318,86 @@ tokenRoutes.get('/leaderboard', async (c) => {
     return c.json({ success: false, error: 'Failed to get leaderboard' }, 500);
   }
 });
+
+// POST /api/tokens/auto-earn - Auto-earn tokens every 30 seconds
+tokenRoutes.post('/auto-earn', requireAuth, async (c) => {
+  try {
+    const userId = c.get('userId' as never) as string;
+    await ensureUserTokenRecords(c.env.DB, userId);
+    
+    const today = getTodayUTC();
+    
+    // Check daily cap
+    const todayEarnings = await c.env.DB.prepare(
+      'SELECT amount FROM daily_earnings WHERE user_id = ? AND date = ?'
+    ).bind(userId, today).first<{ amount: number }>();
+    
+    const currentDaily = todayEarnings?.amount || 0;
+    if (currentDaily >= DAILY_CAP) {
+      return c.json({ success: false, error: 'Daily cap reached' }, 200);
+    }
+    
+    // Calculate earning amount based on user's droplet level
+    // For now, let's use a base rate that allows reaching daily cap
+    // 7500 tokens / day = 7500 / (24 * 60 * 60 / 30) = ~2.6 tokens per 30 seconds
+    // Let's round up to 3 tokens per 30 seconds for a nice even number
+    let baseEarningRate = 3;
+    
+    // Get user's highest level droplet for bonus
+    const userDroplet = await c.env.DB.prepare(
+      'SELECT level, is_legendary FROM characters WHERE owner_user_id = ? ORDER BY level DESC LIMIT 1'
+    ).bind(userId).first<{ level: number; is_legendary: number }>();
+    
+    if (userDroplet) {
+      // Bonus based on droplet level
+      baseEarningRate += userDroplet.level; // +1 to +5 based on level
+      if (userDroplet.is_legendary) {
+        baseEarningRate *= 2; // Legendary droplets earn 2x
+      }
+    }
+    
+    // Apply streak multiplier
+    const streak = await c.env.DB.prepare(
+      'SELECT current_streak FROM user_streaks WHERE user_id = ?'
+    ).bind(userId).first<{ current_streak: number }>();
+    
+    let multiplier = 1.0;
+    if (streak) {
+      if (streak.current_streak >= 100) multiplier = 1.5;
+      else if (streak.current_streak >= 30) multiplier = 1.25;
+      else if (streak.current_streak >= 7) multiplier = 1.1;
+    }
+    
+    const finalAmount = Math.floor(baseEarningRate * multiplier);
+    const amountToAward = Math.min(finalAmount, DAILY_CAP - currentDaily);
+    
+    if (amountToAward <= 0) {
+      return c.json({ success: false, error: 'Daily cap reached' }, 200);
+    }
+    
+    // Award the tokens
+    const success = await awardTokens(
+      c.env.DB, 
+      userId, 
+      amountToAward, 
+      'passive', 
+      `Auto-earned ${amountToAward} tokens (${userDroplet ? `Level ${userDroplet.level}` : 'No droplet'})`
+    );
+    
+    if (success) {
+      return c.json({ 
+        success: true, 
+        data: { 
+          earned: amountToAward,
+          remaining_daily: DAILY_CAP - currentDaily - amountToAward
+        } 
+      });
+    } else {
+      return c.json({ success: false, error: 'Failed to award tokens' }, 500);
+    }
+    
+  } catch (error) {
+    console.error('Auto-earn tokens error:', error);
+    return c.json({ success: false, error: 'Failed to auto-earn tokens' }, 500);
+  }
+});

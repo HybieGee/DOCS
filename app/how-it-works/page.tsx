@@ -67,15 +67,15 @@ export default function HowItWorksPage() {
                   <div className="flex gap-4">
                     <div className="text-3xl">2️⃣</div>
                     <div>
-                      <h3 className="font-semibold text-lg mb-1">Water Other Droplets</h3>
-                      <p className="text-white/70">Help other droplets grow by watering them (max 3 per hour)</p>
+                      <h3 className="font-semibold text-lg mb-1">Earn Automatically</h3>
+                      <p className="text-white/70">Stay active to automatically earn tokens every 30 seconds! Higher level droplets earn more.</p>
                     </div>
                   </div>
                   <div className="flex gap-4">
                     <div className="text-3xl">3️⃣</div>
                     <div>
-                      <h3 className="font-semibold text-lg mb-1">Participate in Voting</h3>
-                      <p className="text-white/70">Vote on community lore to earn additional rewards</p>
+                      <h3 className="font-semibold text-lg mb-1">Water & Vote for Bonuses</h3>
+                      <p className="text-white/70">Water other droplets and vote on community lore for additional bonus rewards</p>
                     </div>
                   </div>
                 </div>
@@ -125,30 +125,40 @@ export default function HowItWorksPage() {
                   </div>
 
                   <div className="bg-black/30 rounded-lg p-4 border border-purple-500/20">
-                    <h3 className="font-semibold text-purple-400 text-lg mb-3">Passive Holding Rewards</h3>
+                    <h3 className="font-semibold text-purple-400 text-lg mb-3">Automatic Earning System</h3>
                     <div className="space-y-2 text-white/80">
                       <div className="flex justify-between">
+                        <span>Base Rate (No Droplet):</span>
+                        <span className="font-bold">3 $DROPLET/30sec</span>
+                      </div>
+                      <div className="flex justify-between">
                         <span>Level 1 Droplet:</span>
-                        <span className="font-bold">10 $DROPLET/day</span>
+                        <span className="font-bold">4 $DROPLET/30sec</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Level 2 Droplet:</span>
-                        <span className="font-bold">25 $DROPLET/day</span>
+                        <span className="font-bold">5 $DROPLET/30sec</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Level 3 Droplet:</span>
-                        <span className="font-bold">50 $DROPLET/day</span>
+                        <span className="font-bold">6 $DROPLET/30sec</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Level 4 Droplet:</span>
-                        <span className="font-bold">100 $DROPLET/day</span>
+                        <span className="font-bold">7 $DROPLET/30sec</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Level 5 Droplet:</span>
-                        <span className="font-bold">200 $DROPLET/day</span>
+                        <span className="font-bold">8 $DROPLET/30sec</span>
                       </div>
                       <div className="text-sm text-white/60 mt-2">
                         * Legendary droplets earn 2x passive rewards
+                      </div>
+                      <div className="text-sm text-white/60">
+                        * Tokens automatically earned every 30 seconds while active
+                      </div>
+                      <div className="text-sm text-white/60">
+                        * Daily cap: 7,500 $DROPLET maximum per day
                       </div>
                     </div>
                   </div>
