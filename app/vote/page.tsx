@@ -170,8 +170,8 @@ export default function VotePage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
+      <div className="flex-1 max-w-6xl mx-auto w-full p-6 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Lore Voting</h1>
@@ -246,8 +246,8 @@ export default function VotePage() {
           ))}
         </div>
 
-        {/* Lore Entries */}
-        <div className="space-y-6">
+        {/* Lore Entries - Scrollable Container */}
+        <div className="flex-1 overflow-y-auto space-y-6 pr-2" style={{ maxHeight: 'calc(100vh - 400px)' }}>
           {loreEntries.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-white/60 mb-4">No lore entries found</div>

@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { verifyJWT } from '@/lib/auth/jwt';
 import type { Env } from '../index';
+import { CloudflareKV } from '@/lib/kv';
 
 export const votingRoutes = new Hono<{ Bindings: Env }>();
 
@@ -171,25 +172,38 @@ votingRoutes.get('/stats', async (c) => {
   }
 });
 
-// POST /api/voting/lore/:id/vote - Vote on a lore entry
+// POST /api/voting/lore/:id/vote - Vote on a lore entry with rate limiting
 votingRoutes.post('/lore/:id/vote', async (c) => {
   try {
     // Get user info
     let userId: string | null = null;
+    let userAddress: string | null = null;
     try {
       const token = getCookie(c, 'session');
       if (token) {
         const payload = await verifyJWT(token, c.env.JWT_SECRET);
         if (payload) {
           userId = payload.sub;
+          userAddress = payload.solana_address;
         }
       }
     } catch (error) {
       return c.json({ success: false, error: 'Not authenticated' }, 401);
     }
 
-    if (!userId) {
+    if (!userId || !userAddress) {
       return c.json({ success: false, error: 'Must be logged in' }, 401);
+    }
+
+    // Initialize KV for rate limiting
+    const kv = new CloudflareKV(c.env.CACHE);
+    const hourBucket = Math.floor(Date.now() / 3600000);
+    const voteKey = `votes:total:${userAddress}:${hourBucket}`;
+    
+    // Check vote rate limit (3 per hour)
+    let totalVotes = await kv.get<number>(voteKey) || 0;
+    if (totalVotes >= 3) {
+      return c.json({ success: false, error: 'VOTE_LIMIT_REACHED' }, 429);
     }
 
     const loreId = c.req.param('id');
@@ -233,6 +247,9 @@ votingRoutes.post('/lore/:id/vote', async (c) => {
       await c.env.DB.prepare(
         'INSERT INTO lore_votes (id, lore_id, user_id, vote_type) VALUES (?, ?, ?, ?)'
       ).bind(voteId, loreId, userId, body.vote_type).run();
+      
+      // Increment rate limit counter only for new votes
+      await kv.set(voteKey, totalVotes + 1, 3700); // Expire after ~1 hour
     }
 
     // Calculate new vote count and quality score

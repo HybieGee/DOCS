@@ -30,7 +30,7 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
   const [loreText, setLoreText] = useState('');
   const [isSubmittingLore, setIsSubmittingLore] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'lore'>('info');
-  const [existingLore, setExistingLore] = useState<Array<{id: string; body: string; author_user_id: string; created_at: string; likes_count: number; user_liked: number}>>([]);
+  const [existingLore, setExistingLore] = useState<Array<{id: string; body: string; author_user_id: string; created_at: string}>>([]);
   const [loadingLore, setLoadingLore] = useState(false);
 
   // Fetch existing lore when component mounts or when lore tab is selected
@@ -76,32 +76,7 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
     console.log('ExistingLore state changed:', existingLore, 'Length:', existingLore.length);
   }, [existingLore]);
 
-  const handleLikeLore = async (loreId: string, currentlyLiked: boolean) => {
-    if (!user) return;
-
-    try {
-      const method = currentlyLiked ? 'DELETE' : 'POST';
-      const response = await fetch(getApiUrl(`/api/lore/${loreId}/like`), {
-        method,
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Update the lore in our state
-        setExistingLore(prev => prev.map(lore => 
-          lore.id === loreId 
-            ? { ...lore, likes_count: data.data.likes_count, user_liked: data.data.liked ? 1 : 0 }
-            : lore
-        ));
-      } else {
-        const error = await response.json();
-        console.error('Like error:', error.error);
-      }
-    } catch (error) {
-      console.error('Error liking lore:', error);
-    }
-  };
+  // Likes system has been removed
 
   const handleWater = async () => {
     if (!user || isWatering) return;
@@ -360,32 +335,9 @@ export function CharacterCard({ character, onClose, onRefresh }: CharacterCardPr
                       return (
                       <div key={lore.id} className="border-b border-white/10 pb-3 last:border-b-0">
                         <p className="text-white text-sm mb-2">{lore.body}</p>
-                        <div className="flex items-center justify-between">
-                          <p className="text-white/40 text-xs">
-                            {new Date(lore.created_at).toLocaleDateString()}
-                          </p>
-                          {user && (
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleLikeLore(lore.id, Boolean(lore.user_liked))}
-                                className={`flex items-center gap-1 text-xs transition-colors ${
-                                  lore.user_liked 
-                                    ? 'text-red-400 hover:text-red-300' 
-                                    : 'text-white/60 hover:text-red-400'
-                                }`}
-                              >
-                                <span className="text-sm">{lore.user_liked ? '❤️' : '🤍'}</span>
-                                <span>{lore.likes_count}</span>
-                              </button>
-                            </div>
-                          )}
-                          {!user && lore.likes_count > 0 && (
-                            <div className="flex items-center gap-1 text-white/40 text-xs">
-                              <span className="text-sm">❤️</span>
-                              <span>{lore.likes_count}</span>
-                            </div>
-                          )}
-                        </div>
+                        <p className="text-white/40 text-xs">
+                          {new Date(lore.created_at).toLocaleDateString()}
+                        </p>
                       </div>
                       );
                     })}

@@ -4,6 +4,8 @@ import { verifyJWT } from '@/lib/auth/jwt';
 import type { Env } from '../index';
 import type { Character, Water } from '@/lib/types/index';
 import { LEGENDARY_CHANCE, EVOLUTION_THRESHOLDS, MINTS_PER_DAY_LIMIT } from '@/lib/types/index';
+import { CloudflareKV } from '@/lib/kv';
+import { publishWorldEvent } from '@/lib/worldEvents';
 
 export const characterRoutes = new Hono<{ Bindings: Env }>();
 
@@ -138,14 +140,40 @@ characterRoutes.post('/mint', requireAuth, async (c) => {
   }
 });
 
-// Water a character
+// Water a character with KV-based rate limiting
 characterRoutes.post('/:id/water', requireAuth, async (c) => {
   try {
     console.log('=== WATERING DEBUG START ===');
     const userId = c.get('userId' as never) as string;
+    const userAddress = c.get('userAddress' as never) as string;
     const characterId = c.req.param('id');
     console.log('User ID:', userId);
     console.log('Character ID:', characterId);
+
+    // Initialize KV adapter
+    const kv = new CloudflareKV(c.env.CACHE);
+
+    // Hour bucket for rate limiting
+    const hourBucket = Math.floor(Date.now() / 3600000);
+    const totalKey = `waters:total:${userAddress}:${hourBucket}`;
+    const pairKey = `waters:pair:${userAddress}:${characterId}:${hourBucket}`;
+
+    // Check total waters per hour (max 3)
+    console.log('Checking rate limits...');
+    let total = await kv.get<number>(totalKey) || 0;
+    console.log('Current waters this hour:', total);
+    if (total >= 3) {
+      console.log('User hit hourly limit (3 waters)');
+      return c.json({ success: false, error: 'HOURLY_LIMIT_REACHED' }, 429);
+    }
+
+    // Check per-droplet limit (max 1 per hour)
+    const pairUsed = await kv.get<number>(pairKey);
+    console.log('Already watered this droplet this hour:', pairUsed);
+    if (pairUsed && pairUsed >= 1) {
+      console.log('User already watered this droplet this hour');
+      return c.json({ success: false, error: 'PER_DROPLET_LIMIT_REACHED' }, 429);
+    }
 
     // Check if character exists
     console.log('Checking if character exists...');
@@ -160,61 +188,21 @@ characterRoutes.post('/:id/water', requireAuth, async (c) => {
       return c.json({ success: false, error: 'Character not found' }, 404);
     }
 
-    // Simplified rate limiting - check recent waters (past hour)
-    console.log('Checking rate limits...');
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    console.log('One hour ago timestamp:', oneHourAgo);
-    
-    const recentWaterCount = await c.env.DB.prepare(
-      `SELECT COUNT(*) as count FROM waters 
-       WHERE user_id = ? AND created_at >= ?`
-    )
-      .bind(userId, oneHourAgo)
-      .first<{ count: number }>();
-
-    console.log('Recent water count:', recentWaterCount);
-    if (recentWaterCount && recentWaterCount.count >= 3) {
-      return c.json({ success: false, error: 'You can only water 3 droplets per hour. Please wait.' }, 429);
-    }
-
-    // Check if already watered this specific character in the past hour
-    console.log('Checking if character already watered...');
-    const existingWater = await c.env.DB.prepare(
-      `SELECT id FROM waters 
-       WHERE user_id = ? AND character_id = ? AND created_at >= ?`
-    )
-      .bind(userId, characterId, oneHourAgo)
-      .first();
-
-    console.log('Existing water:', existingWater ? 'YES' : 'NO');
-    if (existingWater) {
-      return c.json({ success: false, error: 'You can only water each droplet once per hour' }, 429);
-    }
+    // Apply rate limits in KV
+    await kv.set(totalKey, total + 1, 3700); // Expire after ~1 hour
+    await kv.set(pairKey, 1, 3700);
 
     // Create water record
     console.log('Creating water record...');
     const waterId = crypto.randomUUID();
     console.log('Water ID:', waterId);
     
-    try {
-      const waterInsert = await c.env.DB.prepare(
-        'INSERT INTO waters (id, user_id, character_id) VALUES (?, ?, ?)'
-      )
-        .bind(waterId, userId, characterId)
-        .run();
-      console.log('Water insert result:', waterInsert);
-    } catch (dbError: any) {
-      console.log('Database error during water insert:', dbError);
-      
-      // Check if it's a UNIQUE constraint error (rate limiting)
-      if (dbError.message && dbError.message.includes('UNIQUE constraint failed')) {
-        console.log('UNIQUE constraint detected - user hit rate limit');
-        return c.json({ success: false, error: 'You can only water each droplet once per hour' }, 429);
-      }
-      
-      // Re-throw if it's a different database error
-      throw dbError;
-    }
+    const waterInsert = await c.env.DB.prepare(
+      'INSERT INTO waters (id, user_id, character_id, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)'
+    )
+      .bind(waterId, userId, characterId)
+      .run();
+    console.log('Water insert result:', waterInsert);
 
     // Update character water count
     console.log('Updating character water count...');
@@ -258,6 +246,17 @@ characterRoutes.post('/:id/water', requireAuth, async (c) => {
     console.log('Clearing world state cache...');
     await c.env.CACHE.delete('world_state');
     console.log('World state cache cleared');
+
+    // Publish world event for real-time updates
+    const eventType = newLevel > character.level ? 'levelUp' : 'water';
+    await publishWorldEvent(kv, eventType, {
+      dropletId: characterId,
+      by: userAddress,
+      waterCount: newWaterCount,
+      level: newLevel,
+      at: Date.now()
+    });
+    console.log(`Published ${eventType} event`);
 
     // Broadcast water event (disabled - Durable Objects not configured)
     // const worldId = (c.env as any).WORLD.idFromName('world-room');

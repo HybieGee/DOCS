@@ -150,8 +150,10 @@ loreRoutes.get('/characters/:id/lore', async (c) => {
   }
 });
 
-// POST /api/lore/:id/like - Like a lore post
+// POST /api/lore/:id/like - DEPRECATED: Likes system removed
 loreRoutes.post('/:id/like', async (c) => {
+  return new Response(null, { status: 410 }); // Gone
+  /*
   try {
     // Get user info
     let userId: string | null = null;
@@ -215,8 +217,13 @@ loreRoutes.post('/:id/like', async (c) => {
   }
 });
 
-// DELETE /api/lore/:id/like - Unlike a lore post
+*/
+});
+
+// DELETE /api/lore/:id/like - DEPRECATED: Likes system removed  
 loreRoutes.delete('/:id/like', async (c) => {
+  return new Response(null, { status: 410 }); // Gone
+  /*
   try {
     // Get user info
     let userId: string | null = null;
@@ -263,4 +270,5 @@ loreRoutes.delete('/:id/like', async (c) => {
     console.error('Unlike lore error:', error);
     return c.json({ success: false, error: 'Failed to unlike lore' }, 500);
   }
+  */
 });

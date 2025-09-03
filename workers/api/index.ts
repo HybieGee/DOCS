@@ -10,6 +10,7 @@ import { loreRoutes } from './routes/lore';
 import { worldRoutes } from './routes/world';
 import { systemRoutes } from './routes/system';
 import { votingRoutes } from './routes/voting';
+import { streamRoutes } from './routes/stream';
 // import { leaderboardRoutes } from './routes/leaderboard';
 // import { WorldRoom } from './durable-objects/world-room';
 
@@ -64,6 +65,7 @@ app.route('/api/lore', loreRoutes);  // Lore routes include /characters/:id/lore
 app.route('/api/world', worldRoutes);
 app.route('/api/system', systemRoutes);
 app.route('/api/voting', votingRoutes);
+app.route('/api/stream', streamRoutes);
 // app.route('/api/leaderboard', leaderboardRoutes);
 
 // WebSocket endpoint for real-time updates (simplified without Durable Objects)

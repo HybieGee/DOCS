@@ -7,8 +7,9 @@ import { SimpleAuthModal } from './components/SimpleAuthModal';
 import { AccountModal } from './components/AccountModal';
 import { CreationsModal } from './components/CreationsModal';
 import { useAuth } from './hooks/useAuth';
+import { useWorldStream } from './hooks/useWorldStream';
 import type { Character } from '@/lib/types';
-import { getApiUrl, getWebSocketUrl } from '@/lib/utils/api';
+import { getApiUrl } from '@/lib/utils/api';
 
 export default function Home() {
   const { user, logout } = useAuth();
@@ -67,47 +68,51 @@ export default function Home() {
     await fetchCharacters();
   }, [fetchWorldState, fetchCharacters]);
 
-  const handleRealtimeMessage = useCallback((message: { type: string; payload: Record<string, unknown> }) => {
-    switch (message.type) {
-      case 'character_spawn':
-        setCharacters((prev) => [message.payload as unknown as Character, ...prev]);
+  // Handle real-time events from SSE stream
+  const handleWorldEvent = useCallback((type: string, data: unknown) => {
+    console.log('World event received:', type, data);
+    
+    switch (type) {
+      case 'spawn':
+        // Add new character with pending animation
+        const newCharacter = data as Character;
+        setPendingCharacter(newCharacter);
+        setTimeout(() => {
+          setCharacters((prev) => [newCharacter, ...prev]);
+          setPendingCharacter(null);
+        }, 1500);
         break;
+        
       case 'water':
-      case 'level_up':
+      case 'levelUp':
+        // Update character state
+        const updateData = data as { dropletId: string; waterCount: number; level: number };
         setCharacters((prev) =>
           prev.map((char) =>
-            char.id === message.payload.character_id
-              ? { ...char, water_count: message.payload.water_count as number, level: message.payload.level as number }
+            char.id === updateData.dropletId
+              ? { ...char, water_count: updateData.waterCount, level: updateData.level }
               : char
           )
         );
-        break;
-      case 'milestone':
-        setWorldState((prev) => ({ ...prev, ...message.payload }));
+        
+        // Also update world state totals
+        if (type === 'water') {
+          setWorldState(prev => ({
+            ...prev,
+            total_waters: prev.total_waters + 1
+          }));
+        }
         break;
     }
   }, []);
 
-  const connectToRealtime = useCallback(() => {
-    const ws = new WebSocket(getWebSocketUrl('/api/realtime'));
-
-    ws.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      handleRealtimeMessage(message);
-    };
-
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-
-    return () => ws.close();
-  }, [handleRealtimeMessage]);
+  // Connect to SSE stream for real-time updates
+  useWorldStream(handleWorldEvent);
 
   useEffect(() => {
     fetchWorldState();
     fetchCharacters();
-    connectToRealtime();
-  }, [fetchWorldState, fetchCharacters, connectToRealtime]);
+  }, [fetchWorldState, fetchCharacters]);
 
   const checkCanCreateToday = useCallback(async () => {
     if (!user) return;
