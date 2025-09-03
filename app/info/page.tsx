@@ -17,6 +17,16 @@ interface SystemStats {
   last_verification_check: string;
 }
 
+interface UserCreation {
+  id: string;
+  name: string;
+  is_legendary: boolean;
+  level: number;
+  created_at: string;
+  water_count: number;
+  owner_user_id: string;
+}
+
 interface VerificationLog {
   id: string;
   type: 'image_hash' | 'stats_audit' | 'blockchain_verify' | 'api_integrity';
@@ -29,6 +39,7 @@ export default function InfoPage() {
   const { user } = useAuth();
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [verificationLogs, setVerificationLogs] = useState<VerificationLog[]>([]);
+  const [userCreation, setUserCreation] = useState<UserCreation | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'verification' | 'integrity'>('overview');
 
@@ -53,6 +64,20 @@ export default function InfoPage() {
       if (verificationResponse.ok) {
         const verificationData = await verificationResponse.json();
         setVerificationLogs(verificationData.data || []);
+      }
+
+      // Fetch user's creation if logged in
+      if (user) {
+        const charactersResponse = await fetch(getApiUrl('/api/characters'), { credentials: 'include' });
+        if (charactersResponse.ok) {
+          const charactersData = await charactersResponse.json();
+          const userChar = charactersData.data.find((char: UserCreation) => 
+            char.owner_user_id === user.id && char.id.startsWith('cr_')
+          );
+          if (userChar) {
+            setUserCreation(userChar);
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to fetch system info:', error);
@@ -124,6 +149,39 @@ export default function InfoPage() {
         {/* Overview Tab */}
         {activeTab === 'overview' && stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Your Creation Card - Show first if user has one */}
+            {user && userCreation && (
+              <div className="bg-gradient-to-br from-purple-900/50 to-blue-900/50 rounded-lg p-6 border border-purple-500/30 md:col-span-2 lg:col-span-3">
+                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <span>🌟</span>
+                  <span>Your Creation</span>
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <span className="text-white/60 text-sm">Name</span>
+                    <div className="font-bold text-white">{userCreation.name || `Creation ${userCreation.id.slice(-4)}`}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/60 text-sm">Rarity</span>
+                    <div className="font-bold">
+                      {userCreation.is_legendary ? (
+                        <span className="text-yellow-400">👑 Legendary</span>
+                      ) : (
+                        <span className="text-blue-400">💧 Common</span>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-white/60 text-sm">Level</span>
+                    <div className="font-bold text-green-400">Level {userCreation.level}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/60 text-sm">Created</span>
+                    <div className="font-bold text-purple-400">{new Date(userCreation.created_at).toLocaleDateString()}</div>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-lg p-6 border border-white/10">
               <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <span>🌍</span>

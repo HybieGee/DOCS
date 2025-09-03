@@ -166,7 +166,7 @@ export function CreationsModal({ isOpen, onClose, userId }: CreationsModalProps)
                         </h3>
                       )}
                       <div className="text-white/60 text-xs mt-1">
-                        Level {creation.level} • Created {new Date(creation.created_at).toLocaleDateString()}
+                        Level {creation.level} • {creation.is_legendary ? '👑 Legendary' : '💧 Common'} • Created {new Date(creation.created_at).toLocaleDateString()}
                       </div>
                       <div className="text-white/40 text-xs">
                         ID: {creation.id}

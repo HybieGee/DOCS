@@ -303,13 +303,27 @@ export default function Home() {
         {/* Top Right - Navigation buttons */}
         <div className="top-right-buttons">
           {user && (
-            <button 
-              className="minimal-button text-xs"
-              onClick={() => setShowCreationsModal(true)}
-            >
-              Creations
-            </button>
+            <>
+              <button 
+                className="minimal-button text-xs"
+                onClick={() => setShowCreationsModal(true)}
+              >
+                Creations
+              </button>
+              <button 
+                className="minimal-button text-xs"
+                onClick={() => window.location.href = '/tokens'}
+              >
+                Tokens
+              </button>
+            </>
           )}
+          <button 
+            className="minimal-button text-xs"
+            onClick={() => window.location.href = '/how-it-works'}
+          >
+            How it works
+          </button>
           <button 
             className="minimal-button text-xs"
             onClick={() => window.location.href = '/info'}
