@@ -171,6 +171,13 @@ export function WorldCanvas({ characters, worldState, onCharacterClick, pendingC
   const drawPendingCharacter = (ctx: CanvasRenderingContext2D, character: Character, timestamp: number) => {
     if (!animationStartTime.current) return;
     
+    // Validate character data
+    if (!character || typeof character.x !== 'number' || typeof character.y !== 'number' || 
+        isNaN(character.x) || isNaN(character.y)) {
+      console.error('Invalid character data for pending character:', character);
+      return;
+    }
+    
     const elapsed = timestamp - animationStartTime.current;
     const duration = 1500; // 1.5 seconds
     const progress = Math.min(elapsed / duration, 1);
@@ -197,7 +204,7 @@ export function WorldCanvas({ characters, worldState, onCharacterClick, pendingC
     const glowIntensity = Math.sin(elapsed * 0.01) * 0.5 + 0.5;
     
     const x = character.x;
-    const baseSize = (40 + character.level * 20) * scale;
+    const baseSize = Math.max(10, (40 + character.level * 20) * scale); // Ensure minimum size of 10
     
     // Draw glow effect
     ctx.save();
@@ -205,7 +212,8 @@ export function WorldCanvas({ characters, worldState, onCharacterClick, pendingC
     ctx.shadowBlur = 20;
     ctx.shadowColor = character.is_legendary ? '#FFD700' : '#FFFFFF';
     ctx.beginPath();
-    ctx.arc(x, animatedY, baseSize * 1.5, 0, Math.PI * 2);
+    const glowRadius = Math.max(15, baseSize * 1.5); // Ensure minimum glow radius
+    ctx.arc(x, animatedY, glowRadius, 0, Math.PI * 2);
     ctx.fillStyle = character.is_legendary ? '#FFD700' : '#FFFFFF';
     ctx.fill();
     ctx.restore();
@@ -236,7 +244,7 @@ export function WorldCanvas({ characters, worldState, onCharacterClick, pendingC
     // Sparkle particles around the character
     for (let i = 0; i < 8; i++) {
       const angle = (i / 8) * Math.PI * 2 + elapsed * 0.005;
-      const radius = baseSize + 10 + Math.sin(elapsed * 0.01 + i) * 5;
+      const radius = Math.max(20, baseSize + 10) + Math.sin(elapsed * 0.01 + i) * 5; // Ensure minimum radius
       const sparkleX = x + Math.cos(angle) * radius;
       const sparkleY = animatedY + Math.sin(angle) * radius;
       
