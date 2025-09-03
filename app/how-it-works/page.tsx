@@ -6,8 +6,8 @@ export default function HowItWorksPage() {
   const [activeSection, setActiveSection] = useState<'overview' | 'earning' | 'rewards' | 'levels'>('overview');
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="h-screen bg-black text-white overflow-auto">
+      <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4 gradient-text">How $DROPLET Works</h1>

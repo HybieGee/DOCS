@@ -3,6 +3,7 @@ import { getCookie } from 'hono/cookie';
 import { verifyJWT } from '@/lib/auth/jwt';
 import type { Env } from '../index';
 import { CloudflareKV } from '@/lib/kv';
+import { awardTokens } from './tokens';
 
 export const votingRoutes = new Hono<{ Bindings: Env }>();
 
@@ -250,6 +251,9 @@ votingRoutes.post('/lore/:id/vote', async (c) => {
       
       // Increment rate limit counter only for new votes
       await kv.set(voteKey, totalVotes + 1, 3700); // Expire after ~1 hour
+      
+      // Award tokens for voting
+      await awardTokens(c.env.DB, userId, 50, 'voting', `Voted on lore entry`);
     }
 
     // Calculate new vote count and quality score

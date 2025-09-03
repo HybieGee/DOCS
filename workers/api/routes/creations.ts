@@ -5,6 +5,7 @@ import type { Env } from '../index';
 import { StabilityProvider } from '../lib/providers/stability';
 import { generateSeed } from '../lib/genImage';
 import { ensureBlackAndWhite, validateImageFormat } from '../lib/postprocess';
+import { awardTokens } from './tokens';
 
 export const creationRoutes = new Hono<{ Bindings: Env }>();
 
@@ -215,6 +216,14 @@ creationRoutes.post('/', async (c) => {
       // Clear world state cache so it gets refreshed
       await c.env.CACHE.delete('world_state');
       console.log(`Updated world state character count`);
+    }
+    
+    // Award tokens for minting
+    if (userId) {
+      const tokenAmount = level === 3 ? 2500 : 500; // Legendary gets more
+      const description = level === 3 ? 'Minted legendary droplet!' : 'Minted common droplet';
+      await awardTokens(c.env.DB, userId, tokenAmount, 'minting', description);
+      console.log(`Awarded ${tokenAmount} tokens for minting`);
     }
 
     // Broadcast creation to realtime subscribers
