@@ -367,13 +367,15 @@ export default function Home() {
       <div className="bottom-ui-bar">
         <div className="absolute left-6 flex items-center gap-3">
           <svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M50 10 C50 10, 20 30, 20 55 C20 80, 35 90, 50 90 C65 90, 80 80, 80 55 C80 30, 50 10, 50 10 Z" 
+            {/* Main droplet shape - classic teardrop */}
+            <path d="M50 5 C50 5, 25 30, 25 50 C25 70, 35 80, 50 80 C65 80, 75 70, 75 50 C75 30, 50 5, 50 5 Z" 
                   fill="none" 
                   stroke="white" 
-                  strokeWidth="3"/>
-            <ellipse cx="50" cy="75" rx="25" ry="3" fill="none" stroke="white" strokeWidth="2" opacity="0.6"/>
-            <ellipse cx="50" cy="78" rx="20" ry="2" fill="none" stroke="white" strokeWidth="1.5" opacity="0.4"/>
-            <ellipse cx="50" cy="81" rx="15" ry="1.5" fill="none" stroke="white" strokeWidth="1" opacity="0.3"/>
+                  strokeWidth="2"/>
+            {/* Concentric ripple circles */}
+            <circle cx="50" cy="85" r="20" fill="none" stroke="white" strokeWidth="1.5" opacity="0.5"/>
+            <circle cx="50" cy="85" r="15" fill="none" stroke="white" strokeWidth="1.2" opacity="0.4"/>
+            <circle cx="50" cy="85" r="10" fill="none" stroke="white" strokeWidth="1" opacity="0.3"/>
           </svg>
           <span className="text-white/90 text-sm font-medium">Droplets of Creation</span>
         </div>
