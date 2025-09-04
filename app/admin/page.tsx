@@ -5,7 +5,12 @@ import { getApiUrl } from '@/lib/utils/api';
 
 export default function AdminPage() {
   const [isFixing, setIsFixing] = useState(false);
-  const [status, setStatus] = useState<any>(null);
+  const [status, setStatus] = useState<{
+    total_characters: number;
+    overlapping_pairs: number;
+    min_distance_required: number;
+    overlaps: Array<{ char1: string; char2: string; distance: number }>;
+  } | null>(null);
   const [message, setMessage] = useState('');
 
   const checkStatus = async () => {
@@ -72,7 +77,7 @@ export default function AdminPage() {
                 <div className="mt-4">
                   <div className="text-red-400 font-semibold">Sample Overlaps:</div>
                   <div className="text-sm text-white/70 max-h-32 overflow-y-auto">
-                    {status.overlaps.map((overlap: any, i: number) => (
+                    {status.overlaps.map((overlap, i: number) => (
                       <div key={i}>
                         {overlap.char1} ↔ {overlap.char2} (distance: {overlap.distance}px)
                       </div>
@@ -88,7 +93,7 @@ export default function AdminPage() {
         <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-lg p-6 border border-white/10 mb-6">
           <h2 className="text-xl font-semibold mb-4">Fix Overlapping Positions</h2>
           <p className="text-white/70 mb-4">
-            This will redistribute all existing characters to ensure they don't overlap with each other.
+            This will redistribute all existing characters to ensure they don&apos;t overlap with each other.
             Minimum distance between droplets will be 80px.
           </p>
           
