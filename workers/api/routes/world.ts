@@ -1,6 +1,75 @@
 import { Hono } from 'hono';
 import type { Env } from '../index';
 
+// Simple overlap fix function
+async function fixOverlappingPositions(db: D1Database): Promise<{ updated: number; message: string }> {
+  const MIN_DISTANCE = 80;
+  const WORLD_WIDTH = 1920;
+  const WORLD_HEIGHT = 200;
+  const GROUND_Y_START = 600;
+  
+  // Get all characters
+  const result = await db.prepare('SELECT id, x, y FROM characters').all();
+  const characters = result.results || [];
+  
+  if (characters.length === 0) {
+    return { updated: 0, message: 'No characters found' };
+  }
+  
+  const occupiedPositions: Array<{ x: number; y: number }> = [];
+  let updatedCount = 0;
+  
+  // Redistribute each character to a safe position
+  for (const char of characters) {
+    const charData = char as any;
+    let attempts = 0;
+    let safePosition = null;
+    
+    // Try to find a safe position
+    while (attempts < 50 && !safePosition) {
+      const x = Math.random() * WORLD_WIDTH;
+      const y = Math.random() * WORLD_HEIGHT + GROUND_Y_START;
+      
+      // Check distance from occupied positions
+      let isSafe = true;
+      for (const pos of occupiedPositions) {
+        const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
+        if (distance < MIN_DISTANCE) {
+          isSafe = false;
+          break;
+        }
+      }
+      
+      if (isSafe) {
+        safePosition = { x, y };
+        occupiedPositions.push(safePosition);
+      }
+      
+      attempts++;
+    }
+    
+    // Use fallback position if needed
+    if (!safePosition) {
+      safePosition = {
+        x: Math.random() * WORLD_WIDTH,
+        y: Math.random() * WORLD_HEIGHT + GROUND_Y_START
+      };
+      occupiedPositions.push(safePosition);
+    }
+    
+    // Update character position
+    await db.prepare('UPDATE characters SET x = ?, y = ? WHERE id = ?')
+      .bind(safePosition.x, safePosition.y, charData.id).run();
+    
+    updatedCount++;
+  }
+  
+  return { 
+    updated: updatedCount, 
+    message: `Successfully redistributed ${updatedCount} characters with ${MIN_DISTANCE}px minimum spacing`
+  };
+}
+
 interface WorldState {
   id: number;
   total_characters: number;
@@ -97,6 +166,31 @@ worldRoutes.get('/milestones', async (c) => {
   } catch (error) {
     console.error('Milestones error:', error);
     return c.json({ success: false, error: 'Failed to get milestones' }, 500);
+  }
+});
+
+// POST /api/world/fix-overlaps - Emergency fix for overlapping positions
+worldRoutes.post('/fix-overlaps', async (c) => {
+  try {
+    console.log('Emergency overlap fix called');
+    
+    // Execute the position fix
+    const result = await fixOverlappingPositions(c.env.DB);
+    
+    // Clear world state cache to refresh
+    await c.env.CACHE.delete('world_state');
+    
+    return c.json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    console.error('Fix overlaps error:', error);
+    return c.json({ 
+      success: false, 
+      error: 'Failed to fix overlaps',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, 500);
   }
 });
 

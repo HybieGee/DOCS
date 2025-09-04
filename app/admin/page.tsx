@@ -28,7 +28,7 @@ export default function AdminPage() {
     setMessage('');
     
     try {
-      const response = await fetch(getApiUrl('/api/system/fix-overlaps'), {
+      const response = await fetch(getApiUrl('/api/world/fix-overlaps'), {
         method: 'POST'
       });
       

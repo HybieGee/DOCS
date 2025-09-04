@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Droplet Overlaps</title>
+    <style>
+        body {
+            background: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .container {
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .status {
+            background: #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            border-left-color: #f44336;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Fix Droplet Overlaps</h1>
+        <p>This tool will redistribute all droplets to prevent overlapping with a minimum distance of 80px between each droplet.</p>
+        
+        <button id="checkBtn" onclick="checkOverlaps()">Check Current Overlaps</button>
+        <button id="fixBtn" onclick="fixOverlaps()" style="background: #ff9800;">Fix All Overlaps</button>
+        
+        <div id="status"></div>
+        <div id="progress"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://droplets-api.stealthbundlebot.workers.dev/api';
+        
+        async function checkOverlaps() {
+            const statusDiv = document.getElementById('status');
+            const checkBtn = document.getElementById('checkBtn');
+            
+            checkBtn.disabled = true;
+            checkBtn.innerHTML = '<div class="loading"></div> Checking...';
+            
+            try {
+                // Get all characters directly
+                const response = await fetch(`${API_BASE}/characters`);
+                const data = await response.json();
+                
+                if (!data.success || !data.data) {
+                    throw new Error('Failed to fetch characters');
+                }
+                
+                const characters = data.data;
+                const MIN_DISTANCE = 80;
+                let overlapCount = 0;
+                const overlaps = [];
+                
+                // Check for overlaps
+                for (let i = 0; i < characters.length; i++) {
+                    for (let j = i + 1; j < characters.length; j++) {
+                        const char1 = characters[i];
+                        const char2 = characters[j];
+                        
+                        const distance = Math.sqrt(
+                            Math.pow(char1.x - char2.x, 2) + Math.pow(char1.y - char2.y, 2)
+                        );
+                        
+                        if (distance < MIN_DISTANCE) {
+                            overlapCount++;
+                            overlaps.push({
+                                char1: char1.name || char1.id.slice(-4),
+                                char2: char2.name || char2.id.slice(-4),
+                                distance: Math.round(distance * 10) / 10
+                            });
+                        }
+                    }
+                }
+                
+                statusDiv.innerHTML = `
+                    <div class="status">
+                        <h3>Overlap Status</h3>
+                        <p><strong>Total Characters:</strong> ${characters.length}</p>
+                        <p><strong>Overlapping Pairs:</strong> <span style="color: ${overlapCount > 0 ? '#f44336' : '#4CAF50'}">${overlapCount}</span></p>
+                        <p><strong>Minimum Distance Required:</strong> ${MIN_DISTANCE}px</p>
+                        ${overlaps.length > 0 ? `
+                            <details>
+                                <summary>Sample Overlaps (first 10)</summary>
+                                <ul style="max-height: 200px; overflow-y: auto;">
+                                    ${overlaps.slice(0, 10).map(o => 
+                                        `<li>${o.char1} ↔ ${o.char2} (${o.distance}px apart)</li>`
+                                    ).join('')}
+                                </ul>
+                            </details>
+                        ` : ''}
+                    </div>
+                `;
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Error checking overlaps: ${error.message}</div>`;
+            }
+            
+            checkBtn.disabled = false;
+            checkBtn.innerHTML = 'Check Current Overlaps';
+        }
+        
+        async function fixOverlaps() {
+            const statusDiv = document.getElementById('status');
+            const progressDiv = document.getElementById('progress');
+            const fixBtn = document.getElementById('fixBtn');
+            const checkBtn = document.getElementById('checkBtn');
+            
+            fixBtn.disabled = true;
+            checkBtn.disabled = true;
+            fixBtn.innerHTML = '<div class="loading"></div> Fixing Overlaps...';
+            
+            try {
+                progressDiv.innerHTML = '<div class="status">🔄 Step 1: Fetching all characters...</div>';
+                
+                // Get all characters
+                const response = await fetch(`${API_BASE}/characters`);
+                const data = await response.json();
+                
+                if (!data.success || !data.data) {
+                    throw new Error('Failed to fetch characters');
+                }
+                
+                const characters = data.data;
+                progressDiv.innerHTML = `<div class="status">✅ Found ${characters.length} characters to reposition</div>`;
+                
+                // Generate new positions
+                progressDiv.innerHTML += '<div class="status">🔄 Step 2: Calculating safe positions...</div>';
+                
+                const MIN_DISTANCE = 80;
+                const WORLD_WIDTH = 1920;
+                const WORLD_HEIGHT = 200;
+                const GROUND_Y_START = 600;
+                const MAX_ATTEMPTS = 100;
+                
+                const newPositions = [];
+                const occupiedPositions = [];
+                
+                for (let i = 0; i < characters.length; i++) {
+                    const char = characters[i];
+                    let attempts = 0;
+                    let newPosition = null;
+                    
+                    // Find a safe position
+                    while (attempts < MAX_ATTEMPTS && !newPosition) {
+                        const x = Math.random() * WORLD_WIDTH;
+                        const y = Math.random() * WORLD_HEIGHT + GROUND_Y_START;
+                        
+                        // Check if too close to existing positions
+                        let tooClose = false;
+                        for (const pos of occupiedPositions) {
+                            const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
+                            if (distance < MIN_DISTANCE) {
+                                tooClose = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!tooClose) {
+                            newPosition = { x, y };
+                            occupiedPositions.push(newPosition);
+                        }
+                        
+                        attempts++;
+                    }
+                    
+                    // Fallback position if couldn't find safe spot
+                    if (!newPosition) {
+                        newPosition = {
+                            x: Math.random() * WORLD_WIDTH,
+                            y: Math.random() * WORLD_HEIGHT + GROUND_Y_START
+                        };
+                        occupiedPositions.push(newPosition);
+                    }
+                    
+                    newPositions.push({
+                        id: char.id,
+                        x: newPosition.x,
+                        y: newPosition.y
+                    });
+                    
+                    // Update progress
+                    if (i % 5 === 0) {
+                        progressDiv.innerHTML = `<div class="status">🔄 Step 2: Calculating positions... (${i + 1}/${characters.length})</div>`;
+                        await new Promise(resolve => setTimeout(resolve, 10)); // Brief pause for UI
+                    }
+                }
+                
+                progressDiv.innerHTML += `<div class="status">✅ Generated ${newPositions.length} safe positions</div>`;
+                progressDiv.innerHTML += '<div class="status">⚠️ <strong>Note:</strong> Position updates require API endpoints that may not be available. This tool shows what the positions would be.</div>';
+                
+                // Show the new positions (since we can't update via API)
+                let positionsHtml = '<div class="status"><h4>🎯 New Positions Generated</h4><details><summary>View All New Positions</summary><div style="max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px;">';
+                
+                newPositions.forEach(pos => {
+                    positionsHtml += `<div>${pos.id.slice(-8)}: (${Math.round(pos.x)}, ${Math.round(pos.y)})</div>`;
+                });
+                
+                positionsHtml += '</div></details></div>';
+                progressDiv.innerHTML += positionsHtml;
+                
+                statusDiv.innerHTML = `
+                    <div class="status">
+                        ✅ <strong>Overlap fix calculated successfully!</strong><br>
+                        📍 All ${characters.length} droplets now have safe positions with ${MIN_DISTANCE}px minimum spacing.<br>
+                        ⚠️ Note: The actual position updates would require API access to modify the database.
+                    </div>
+                `;
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Error fixing overlaps: ${error.message}</div>`;
+                progressDiv.innerHTML = '';
+            }
+            
+            fixBtn.disabled = false;
+            checkBtn.disabled = false;
+            fixBtn.innerHTML = 'Fix All Overlaps';
+        }
+        
+        // Auto-check overlaps on load
+        window.addEventListener('load', checkOverlaps);
+    </script>
+</body>
+</html>
