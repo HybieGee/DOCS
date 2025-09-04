@@ -5,7 +5,7 @@
 
 export const CONFIG = {
   // CONTRACT ADDRESS - Update this when you launch!
-  CONTRACT_ADDRESS: 'Coming Soon', // Replace with actual CA like "7xYz...abc123"
+  CONTRACT_ADDRESS: '8ePxrg4ywm9ivgw2AEZTZoGVWkKyxiHHaR3Txa1Bpump', // Replace with actual CA like "7xYz...abc123"
   
   // Token Info
   TOKEN: {
