@@ -224,15 +224,15 @@ questRoutes.get('/', requireAuth, async (c) => {
     ).bind(userId, userId).all();
     
     // Combine data
-    const quests = (questsResult.results || []).map(quest => {
-      let progress = null;
+    const quests = (questsResult.results || []).map((quest: any) => {
+      let progress: any = null;
       
       if (quest.type === 'daily') {
-        progress = (dailyProgress.results || []).find(p => p.quest_id === quest.id);
+        progress = (dailyProgress.results || []).find((p: any) => p.quest_id === quest.id);
       } else if (quest.type === 'weekly') {
-        progress = (weeklyProgress.results || []).find(p => p.quest_id === quest.id);
+        progress = (weeklyProgress.results || []).find((p: any) => p.quest_id === quest.id);
       } else if (quest.type === 'achievement') {
-        progress = (achievements.results || []).find(p => p.quest_id === quest.id);
+        progress = (achievements.results || []).find((p: any) => p.quest_id === quest.id);
       }
       
       return {
@@ -267,7 +267,7 @@ questRoutes.post('/:questId/claim', requireAuth, async (c) => {
     // Get quest details
     const quest = await c.env.DB.prepare(
       'SELECT * FROM quest_definitions WHERE id = ?'
-    ).bind(questId).first();
+    ).bind(questId).first<any>();
     
     if (!quest) {
       return c.json({ success: false, error: 'Quest not found' }, 404);
@@ -284,7 +284,7 @@ questRoutes.post('/:questId/claim', requireAuth, async (c) => {
     const progress = await c.env.DB.prepare(
       `SELECT * FROM user_quest_progress 
        WHERE user_id = ? AND quest_id = ? ${resetDate ? 'AND reset_date = ?' : ''}`
-    ).bind(userId, questId, ...(resetDate ? [resetDate] : [])).first();
+    ).bind(userId, questId, ...(resetDate ? [resetDate] : [])).first<any>();
     
     if (!progress || !progress.completed) {
       return c.json({ success: false, error: 'Quest not completed' }, 400);
