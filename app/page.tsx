@@ -375,13 +375,17 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Bottom UI Bar - CA Spot and Roadmap */}
+      {/* Bottom UI Bar - CA Spot */}
       <div className="bottom-ui-bar">
         <div className="text-white/70 text-sm">
           <span className="font-mono">CA: Coming Soon</span>
         </div>
+      </div>
+
+      {/* Roadmap Button - Bottom Right */}
+      <div className="fixed bottom-6 right-6 z-50">
         <button 
-          className="minimal-button text-xs absolute right-6"
+          className="minimal-button text-xs px-4 py-2"
           onClick={() => window.location.href = '/roadmap'}
         >
           🗺️ Roadmap
