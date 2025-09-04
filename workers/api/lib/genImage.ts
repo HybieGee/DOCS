@@ -24,19 +24,25 @@ export function deriveTraits(seed: string, level: 1 | 2 | 3): Record<string, any
     level,
     form: level === 1 ? "droplet" : level === 2 ? "stream" : "wave",
     eyes: ["dot", "sparkle", "ripple"][rng(1) % (level === 1 ? 1 : level === 2 ? 2 : 3)],
-    ripple_count: level + (rng(2) % 2),
+    ripple_count: level + (rng(2) % 3), // More ripple variation
+    // Add unique identifier elements
+    droplet_size: ["tiny", "small", "medium"][rng(8) % 3],
+    surface_texture: ["smooth", "bubbly", "crystalline"][rng(9) % 3],
+    edge_style: ["rounded", "pointed", "wavy"][rng(10) % 3],
   };
 
-  // Add level-specific traits
+  // Add level-specific traits with more variation
   if (level >= 2) {
-    baseTraits.fins = ["small", "curved", "splash"][rng(3) % 3];
-    baseTraits.crest = rng(4) % 2 === 0 ? "small" : "none";
+    baseTraits.fins = ["small", "curved", "splash", "flowing", "pointed"][rng(3) % 5];
+    baseTraits.crest = ["small", "none", "wavy", "peaked"][rng(4) % 4];
+    baseTraits.motion_lines = ["straight", "curved", "spiral"][rng(11) % 3];
   }
 
   if (level >= 3) {
-    baseTraits.crest = ["pronounced", "flowing", "heroic"][rng(5) % 3];
-    baseTraits.foam = rng(6) % 2 === 0 ? "hatched" : "streaked";
-    baseTraits.posture = ["heroic", "dynamic", "majestic"][rng(7) % 3];
+    baseTraits.crest = ["pronounced", "flowing", "heroic", "majestic", "towering"][rng(5) % 5];
+    baseTraits.foam = ["hatched", "streaked", "dotted", "swirled"][rng(6) % 4];
+    baseTraits.posture = ["heroic", "dynamic", "majestic", "regal", "commanding"][rng(7) % 5];
+    baseTraits.aura_lines = ["radial", "spiral", "wave", "burst"][rng(12) % 4];
   }
 
   return baseTraits;

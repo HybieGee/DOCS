@@ -8,6 +8,53 @@ import { ensureBlackAndWhite, validateImageFormat } from '../lib/postprocess';
 import { awardTokens } from './tokens';
 import { trackQuestAction } from './quests';
 
+// Helper function to generate non-overlapping position
+async function generateSafePosition(db: D1Database): Promise<{ x: number, y: number }> {
+  const MIN_DISTANCE = 80; // Minimum distance between droplets
+  const MAX_ATTEMPTS = 50;
+  const WORLD_WIDTH = 1200;
+  const WORLD_HEIGHT = 200;
+  const GROUND_Y_START = 400;
+  
+  // Get existing positions
+  const existingCharacters = await db.prepare(
+    'SELECT x, y FROM characters ORDER BY created_at DESC LIMIT 100'
+  ).all();
+  
+  const existingPositions = (existingCharacters.results || []).map((char: any) => ({
+    x: char.x,
+    y: char.y
+  }));
+  
+  let attempts = 0;
+  while (attempts < MAX_ATTEMPTS) {
+    const x = Math.random() * WORLD_WIDTH;
+    const y = Math.random() * WORLD_HEIGHT + GROUND_Y_START;
+    
+    // Check if this position is too close to any existing position
+    let tooClose = false;
+    for (const pos of existingPositions) {
+      const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
+      if (distance < MIN_DISTANCE) {
+        tooClose = true;
+        break;
+      }
+    }
+    
+    if (!tooClose) {
+      return { x, y };
+    }
+    
+    attempts++;
+  }
+  
+  // Fallback: if we can't find a safe position after many attempts, just use random
+  return {
+    x: Math.random() * WORLD_WIDTH,
+    y: Math.random() * WORLD_HEIGHT + GROUND_Y_START
+  };
+}
+
 export const creationRoutes = new Hono<{ Bindings: Env }>();
 
 // Rate limiting helper - 1 creation per day per account
@@ -157,6 +204,9 @@ creationRoutes.post('/', async (c) => {
     
     // Also store in database for immediate visibility
     try {
+      // Generate safe position that doesn't overlap with existing characters
+      const position = await generateSafePosition(c.env.DB);
+      
       await c.env.DB.prepare(
         `INSERT INTO characters (
           id, owner_user_id, wallet_address, name, is_legendary,
@@ -169,8 +219,8 @@ creationRoutes.post('/', async (c) => {
           wallet || '',
           `Creation ${id.slice(-4)}`,
           level === 3 ? 1 : 0, // legendary if level 3
-          Math.random() * 1200, // random X position
-          Math.random() * 200 + 400, // random Y position
+          position.x, // safe X position
+          position.y, // safe Y position
           level,
           0, // water count starts at 0
           seed,

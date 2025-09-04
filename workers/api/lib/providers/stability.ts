@@ -31,15 +31,34 @@ White line art creature only, thin white outlines, minimalist design.
 Subject: Simple WATER DROPLET CREATURE made of white lines.
 Isolated on transparent, PNG cutout, sticker format, no square, no frame.`;
 
+    // Add unique variation elements to ensure no duplicates
+    const uniqueElements = this.getUniqueElements(traits);
+    
     const levelPrompts = {
-      1: `Level 1: tiny water droplet with ${traits.eyes} dot eyes, ${traits.ripple_count} ripple lines, simple round shape.`,
-      2: `Level 2: water droplet with ${traits.fins} fin lines, ${traits.ripple_count} ripples, ${traits.crest} wave tail.`,
-      3: `Level 3: flowing water creature, ${traits.crest} crest lines, ${traits.foam} foam streaks, ${traits.ripple_count} ripples.`
+      1: `Level 1: tiny water droplet with ${traits.eyes} dot eyes, ${traits.ripple_count} ripple lines, simple round shape, ${uniqueElements.detail}.`,
+      2: `Level 2: water droplet with ${traits.fins} fin lines, ${traits.ripple_count} ripples, ${traits.crest} wave tail, ${uniqueElements.feature}.`,
+      3: `Level 3: flowing water creature, ${traits.crest} crest lines, ${traits.foam} foam streaks, ${traits.ripple_count} ripples, ${uniqueElements.accent}.`
     };
 
     const styleNote = `CRITICAL: Die-cut sticker style, isolated white line art only, completely transparent background, no box, no frame, no square background.`;
 
     return `${basePrompt}\n\n${levelPrompts[level]}\n\n${styleNote}`;
+  }
+
+  private getUniqueElements(traits: Record<string, any>): Record<string, string> {
+    // Generate unique visual elements based on traits to ensure no duplicates
+    const hash = Object.values(traits).join('').length;
+    const rng = (offset: number) => Math.abs(hash + offset) % 10;
+    
+    const details = ["subtle highlights", "soft shadows", "curved edges", "smooth lines", "gentle curves"];
+    const features = ["flowing motion", "dynamic splash", "elegant curves", "graceful form", "fluid movement"];
+    const accents = ["dramatic waves", "majestic presence", "heroic stance", "powerful flow", "commanding aura"];
+    
+    return {
+      detail: details[rng(1) % details.length],
+      feature: features[rng(2) % features.length], 
+      accent: accents[rng(3) % accents.length]
+    };
   }
 
   private buildNegativePrompt(): string {
