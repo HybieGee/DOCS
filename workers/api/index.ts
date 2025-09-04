@@ -12,6 +12,7 @@ import { systemRoutes } from './routes/system';
 import { votingRoutes } from './routes/voting';
 import { streamRoutes } from './routes/stream';
 import { tokenRoutes } from './routes/tokens';
+import { questRoutes } from './routes/quests';
 // import { leaderboardRoutes } from './routes/leaderboard';
 // import { WorldRoom } from './durable-objects/world-room';
 
@@ -68,6 +69,7 @@ app.route('/api/system', systemRoutes);
 app.route('/api/voting', votingRoutes);
 app.route('/api/stream', streamRoutes);
 app.route('/api/tokens', tokenRoutes);
+app.route('/api/quests', questRoutes);
 // app.route('/api/leaderboard', leaderboardRoutes);
 
 // WebSocket endpoint for real-time updates (simplified without Durable Objects)

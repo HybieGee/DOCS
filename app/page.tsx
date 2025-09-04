@@ -325,6 +325,12 @@ export default function Home() {
               </button>
               <button 
                 className="minimal-button text-xs"
+                onClick={() => window.location.href = '/quests'}
+              >
+                Quests
+              </button>
+              <button 
+                className="minimal-button text-xs"
                 onClick={() => window.location.href = '/tokens'}
               >
                 Tokens

@@ -4,6 +4,7 @@ import { createJWT, verifyJWT, hashPassword, verifyPassword } from '@/lib/auth/j
 import type { Env } from '../index';
 import type { SignupRequest, LoginRequest, User } from '@/lib/types';
 import { verifySignature } from '@/lib/utils/solana';
+import { trackQuestAction } from './quests';
 
 export const authRoutes = new Hono<{ Bindings: Env }>();
 
@@ -126,6 +127,9 @@ authRoutes.post('/login', async (c) => {
       maxAge: 7 * 24 * 60 * 60,
       domain: undefined, // Don't set domain to allow cross-origin
     });
+
+    // Track login quest action
+    await trackQuestAction(c.env.DB, user.id, 'login');
 
     // Remove password hash from response
     const { password_hash, ...userData } = user;

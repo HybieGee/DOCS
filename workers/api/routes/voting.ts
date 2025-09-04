@@ -4,6 +4,7 @@ import { verifyJWT } from '@/lib/auth/jwt';
 import type { Env } from '../index';
 import { CloudflareKV } from '@/lib/kv';
 import { awardTokens } from './tokens';
+import { trackQuestAction } from './quests';
 
 export const votingRoutes = new Hono<{ Bindings: Env }>();
 
@@ -254,6 +255,9 @@ votingRoutes.post('/lore/:id/vote', async (c) => {
       
       // Award tokens for voting
       await awardTokens(c.env.DB, userId, 50, 'voting', `Voted on lore entry`);
+      
+      // Track quest progress
+      await trackQuestAction(c.env.DB, userId, 'vote', loreId);
     }
 
     // Calculate new vote count and quality score

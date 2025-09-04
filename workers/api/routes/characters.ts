@@ -7,6 +7,7 @@ import { LEGENDARY_CHANCE, EVOLUTION_THRESHOLDS, MINTS_PER_DAY_LIMIT } from '@/l
 import { CloudflareKV } from '@/lib/kv';
 import { publishWorldEvent } from '@/lib/worldEvents';
 import { awardTokens } from './tokens';
+import { trackQuestAction } from './quests';
 
 export const characterRoutes = new Hono<{ Bindings: Env }>();
 
@@ -262,6 +263,10 @@ characterRoutes.post('/:id/water', requireAuth, async (c) => {
     // Award tokens for watering
     await awardTokens(c.env.DB, userId, 100, 'watering', `Watered droplet ${character.name || characterId}`);
     console.log('Awarded 100 tokens for watering');
+    
+    // Track quest progress
+    await trackQuestAction(c.env.DB, userId, 'water', characterId);
+    console.log('Tracked quest action for watering');
 
     // Broadcast water event (disabled - Durable Objects not configured)
     // const worldId = (c.env as any).WORLD.idFromName('world-room');
