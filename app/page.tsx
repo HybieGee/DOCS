@@ -366,17 +366,7 @@ export default function Home() {
       {/* Bottom UI Bar - Logo, CA, and Navigation */}
       <div className="bottom-ui-bar">
         <div className="absolute left-6 flex items-center gap-3">
-          <svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Main droplet shape - classic teardrop */}
-            <path d="M50 5 C50 5, 25 30, 25 50 C25 70, 35 80, 50 80 C65 80, 75 70, 75 50 C75 30, 50 5, 50 5 Z" 
-                  fill="none" 
-                  stroke="white" 
-                  strokeWidth="2"/>
-            {/* Concentric ripple circles */}
-            <circle cx="50" cy="85" r="20" fill="none" stroke="white" strokeWidth="1.5" opacity="0.5"/>
-            <circle cx="50" cy="85" r="15" fill="none" stroke="white" strokeWidth="1.2" opacity="0.4"/>
-            <circle cx="50" cy="85" r="10" fill="none" stroke="white" strokeWidth="1" opacity="0.3"/>
-          </svg>
+          <img src="/logo.svg" alt="Droplets of Creation" width="24" height="24" />
           <span className="text-white/90 text-sm font-medium">Droplets of Creation</span>
         </div>
         
