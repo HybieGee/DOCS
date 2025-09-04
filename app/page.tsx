@@ -6,6 +6,7 @@ import { CharacterCard } from './components/CharacterCard';
 import { SimpleAuthModal } from './components/SimpleAuthModal';
 import { AccountModal } from './components/AccountModal';
 import { CreationsModal } from './components/CreationsModal';
+import ReferralModal from '../components/ui/ReferralModal';
 import { useAuth } from './hooks/useAuth';
 import { useWorldStream } from './hooks/useWorldStream';
 import type { Character } from '@/lib/types';
@@ -27,6 +28,7 @@ export default function Home() {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [canCreateToday, setCanCreateToday] = useState(true);
   const [showCreationsModal, setShowCreationsModal] = useState(false);
+  const [showReferralModal, setShowReferralModal] = useState(false);
   const [pendingCharacter, setPendingCharacter] = useState<Character | null>(null);
 
   const fetchWorldState = useCallback(async () => {
@@ -150,6 +152,33 @@ export default function Home() {
     checkCanCreateToday();
   }, [checkCanCreateToday]);
 
+  // Check for referral code in URL on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    
+    if (refCode && user) {
+      // Apply referral code
+      fetch(getApiUrl('/api/referrals/apply-code'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ referralCode: refCode, newUserId: user.id })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert(`Welcome! You've been referred by ${data.referrerUsername}. You received 500 $DROPLET bonus!`);
+          // Clean URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (data.error !== 'User has already been referred') {
+          console.error('Referral application failed:', data.error);
+        }
+      })
+      .catch(error => console.error('Referral error:', error));
+    }
+  }, [user]);
+
 
   const handleMint = async () => {
     if (!user || isMinting) return;
@@ -262,6 +291,12 @@ export default function Home() {
                 className="minimal-button text-xs"
               >
                 Account
+              </button>
+              <button
+                onClick={() => setShowReferralModal(true)}
+                className="minimal-button text-xs bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-400/30"
+              >
+                Referrals
               </button>
               <button
                 onClick={() => logout()}
@@ -419,6 +454,15 @@ export default function Home() {
         isOpen={showAccountModal}
         onClose={() => setShowAccountModal(false)}
       />
+
+      {/* Referral Modal */}
+      {user && (
+        <ReferralModal
+          isOpen={showReferralModal}
+          onClose={() => setShowReferralModal(false)}
+          userId={user.id}
+        />
+      )}
 
       {/* Creations Modal */}
       {user && (

@@ -34,10 +34,13 @@ Isolated on transparent, PNG cutout, sticker format, no square, no frame.`;
     // Add unique variation elements to ensure no duplicates
     const uniqueElements = this.getUniqueElements(traits);
     
+    // Add seasonal elements to prompts if applicable
+    const seasonalPrompt = traits.is_seasonal ? this.getSeasonalPrompt(traits) : '';
+    
     const levelPrompts = {
-      1: `Level 1: tiny water droplet with ${traits.eyes} dot eyes, ${traits.ripple_count} ripple lines, simple round shape, ${uniqueElements.detail}.`,
-      2: `Level 2: water droplet with ${traits.fins} fin lines, ${traits.ripple_count} ripples, ${traits.crest} wave tail, ${uniqueElements.feature}.`,
-      3: `Level 3: flowing water creature, ${traits.crest} crest lines, ${traits.foam} foam streaks, ${traits.ripple_count} ripples, ${uniqueElements.accent}.`
+      1: `Level 1: tiny water droplet with ${traits.eyes} dot eyes, ${traits.ripple_count} ripple lines, simple round shape, ${uniqueElements.detail}${seasonalPrompt}.`,
+      2: `Level 2: water droplet with ${traits.fins} fin lines, ${traits.ripple_count} ripples, ${traits.crest} wave tail, ${uniqueElements.feature}${seasonalPrompt}.`,
+      3: `Level 3: flowing water creature, ${traits.crest} crest lines, ${traits.foam} foam streaks, ${traits.ripple_count} ripples, ${uniqueElements.accent}${seasonalPrompt}.`
     };
 
     const styleNote = `CRITICAL: Die-cut sticker style, isolated white line art only, completely transparent background, no box, no frame, no square background.`;
@@ -59,6 +62,19 @@ Isolated on transparent, PNG cutout, sticker format, no square, no frame.`;
       feature: features[rng(2) % features.length], 
       accent: accents[rng(3) % accents.length]
     };
+  }
+
+  private getSeasonalPrompt(traits: Record<string, any>): string {
+    if (!traits.seasonal_theme) return '';
+    
+    const seasonalPrompts = {
+      'snowflake': ', with delicate crystalline snowflake patterns, icy blue-white coloring, six-pointed symmetrical design',
+      'icicle': ', with sharp icicle formations, frozen crystal texture, clear glacial appearance',
+      'frost': ', with frosty coating, misty ethereal aura, winter morning frost patterns',
+      'winter-crystal': ', with faceted crystal surfaces, prismatic light refraction, aurora-like shimmer effects'
+    };
+    
+    return seasonalPrompts[traits.seasonal_theme as keyof typeof seasonalPrompts] || '';
   }
 
   private buildNegativePrompt(): string {

@@ -14,6 +14,7 @@ import { streamRoutes } from './routes/stream';
 import { tokenRoutes } from './routes/tokens';
 import { questRoutes } from './routes/quests';
 import { fixPositionsRoutes } from './routes/fix-positions';
+import { referralRoutes } from './routes/referrals';
 // import { leaderboardRoutes } from './routes/leaderboard';
 // import { WorldRoom } from './durable-objects/world-room';
 
@@ -72,6 +73,7 @@ app.route('/api/stream', streamRoutes);
 app.route('/api/tokens', tokenRoutes);
 app.route('/api/quests', questRoutes);
 app.route('/api/fix-positions', fixPositionsRoutes);
+app.route('/api/referrals', referralRoutes);
 // app.route('/api/leaderboard', leaderboardRoutes);
 
 // WebSocket endpoint for real-time updates (simplified without Durable Objects)

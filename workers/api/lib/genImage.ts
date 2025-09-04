@@ -13,8 +13,8 @@ export interface ImageProvider {
   generate(input: GenInput): Promise<GenOutput>;
 }
 
-// Deterministic trait generation based on seed and level
-export function deriveTraits(seed: string, level: 1 | 2 | 3): Record<string, any> {
+// Enhanced trait generation with seasonal support
+export function deriveTraits(seed: string, level: 1 | 2 | 3, seasonalTheme?: string): Record<string, any> {
   // Use seed for deterministic randomness
   const hash = Array.from(seed).reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) | 0, 0);
   const rng = (offset: number) => Math.abs(hash + offset) % 100;
@@ -29,7 +29,36 @@ export function deriveTraits(seed: string, level: 1 | 2 | 3): Record<string, any
     droplet_size: ["tiny", "small", "medium"][rng(8) % 3],
     surface_texture: ["smooth", "bubbly", "crystalline"][rng(9) % 3],
     edge_style: ["rounded", "pointed", "wavy"][rng(10) % 3],
+    // Seasonal theme
+    seasonal_theme: seasonalTheme || null,
+    is_seasonal: !!seasonalTheme,
   };
+
+  // Add seasonal-specific traits
+  if (seasonalTheme) {
+    switch (seasonalTheme) {
+      case 'snowflake':
+        baseTraits.special_pattern = 'crystalline_branches';
+        baseTraits.frost_effect = true;
+        baseTraits.winter_sparkle = rng(13) % 2 === 0;
+        break;
+      case 'icicle':
+        baseTraits.special_pattern = 'sharp_edges';
+        baseTraits.ice_texture = true;
+        baseTraits.frozen_core = true;
+        break;
+      case 'frost':
+        baseTraits.special_pattern = 'frost_coating';
+        baseTraits.misty_aura = true;
+        baseTraits.cold_shimmer = rng(14) % 2 === 0;
+        break;
+      case 'winter-crystal':
+        baseTraits.special_pattern = 'faceted_surface';
+        baseTraits.prismatic_effect = true;
+        baseTraits.aurora_glow = rng(15) % 2 === 0;
+        break;
+    }
+  }
 
   // Add level-specific traits with more variation
   if (level >= 2) {

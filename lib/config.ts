@@ -38,6 +38,26 @@ export const CONFIG = {
     LEGENDARY_CHANCE: 0.05, // 5% chance
     MINTS_PER_DAY: 1,
   },
+
+  // Seasonal Content
+  SEASONAL: {
+    ENABLED: true,
+    CURRENT_SEASON: 'winter', // 'spring', 'summer', 'autumn', 'winter'
+    HOLIDAY_MODE: true, // Enables special holiday themes
+    SEASONAL_DROPLET_CHANCE: 0.15, // 15% chance for seasonal themed droplets
+    WINTER_THEMES: ['snowflake', 'icicle', 'frost', 'winter-crystal'],
+    SPECIAL_EVENT_ACTIVE: false,
+  },
+
+  // Referral System
+  REFERRALS: {
+    ENABLED: true,
+    REFERRER_BONUS: 1000, // $DROPLET bonus for referrer
+    REFEREE_BONUS: 500,   // $DROPLET bonus for new user
+    DAILY_REFERRAL_LIMIT: 10, // Max referrals per day
+    BONUS_MULTIPLIER: 1.1, // 10% bonus for referred users
+    MIN_ACTIVITY_REQUIRED: true, // Referee must create a droplet
+  },
   
   // Token Economy
   ECONOMY: {

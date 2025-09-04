@@ -282,6 +282,20 @@ creationRoutes.post('/', async (c) => {
       } else {
         await trackQuestAction(c.env.DB, userId, 'mint', id);
       }
+
+      // Complete referral activity if this is user's first creation
+      try {
+        const response = await fetch(`${c.req.url.replace(/\/api\/.*/, '')}/api/referrals/complete-activity/${userId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Referral activity check:', result.message);
+        }
+      } catch (error) {
+        console.log('Referral activity check failed:', error);
+      }
       console.log(`Tracked quest action for minting`);
     }
 
