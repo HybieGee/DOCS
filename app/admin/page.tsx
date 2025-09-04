@@ -15,7 +15,7 @@ export default function AdminPage() {
 
   const checkStatus = async () => {
     try {
-      const response = await fetch(getApiUrl('/api/fix-positions/status'));
+      const response = await fetch(getApiUrl('/api/system/overlap-status'));
       const data = await response.json();
       setStatus(data.data);
     } catch (error) {
@@ -28,7 +28,7 @@ export default function AdminPage() {
     setMessage('');
     
     try {
-      const response = await fetch(getApiUrl('/api/fix-positions/redistribute'), {
+      const response = await fetch(getApiUrl('/api/system/fix-overlaps'), {
         method: 'POST'
       });
       
