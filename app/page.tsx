@@ -10,6 +10,7 @@ import { useAuth } from './hooks/useAuth';
 import { useWorldStream } from './hooks/useWorldStream';
 import type { Character } from '@/lib/types';
 import { getApiUrl } from '@/lib/utils/api';
+import { CONFIG } from '@/lib/config';
 
 export default function Home() {
   const { user, logout } = useAuth();
@@ -371,7 +372,7 @@ export default function Home() {
         </div>
         
         <div className="text-white/70 text-sm">
-          <span className="font-mono">CA: Coming Soon</span>
+          <span className="font-mono">CA: {CONFIG.CONTRACT_ADDRESS}</span>
         </div>
         
         <div className="absolute right-6 flex items-center gap-2">
