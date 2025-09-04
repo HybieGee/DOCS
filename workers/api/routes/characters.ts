@@ -267,6 +267,12 @@ characterRoutes.post('/:id/water', requireAuth, async (c) => {
     // Track quest progress
     await trackQuestAction(c.env.DB, userId, 'water', characterId);
     console.log('Tracked quest action for watering');
+    
+    // Track level up achievement if leveled up to 5
+    if (newLevel === 5 && newLevel > character.level) {
+      await trackQuestAction(c.env.DB, userId, 'droplet_level_5', characterId);
+      console.log('Tracked level 5 achievement');
+    }
 
     // Broadcast water event (disabled - Durable Objects not configured)
     // const worldId = (c.env as any).WORLD.idFromName('world-room');

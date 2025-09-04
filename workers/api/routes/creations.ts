@@ -6,6 +6,7 @@ import { StabilityProvider } from '../lib/providers/stability';
 import { generateSeed } from '../lib/genImage';
 import { ensureBlackAndWhite, validateImageFormat } from '../lib/postprocess';
 import { awardTokens } from './tokens';
+import { trackQuestAction } from './quests';
 
 export const creationRoutes = new Hono<{ Bindings: Env }>();
 
@@ -224,6 +225,14 @@ creationRoutes.post('/', async (c) => {
       const description = level === 3 ? 'Minted legendary droplet!' : 'Minted common droplet';
       await awardTokens(c.env.DB, userId, tokenAmount, 'minting', description);
       console.log(`Awarded ${tokenAmount} tokens for minting`);
+      
+      // Track quest progress
+      if (level === 3) {
+        await trackQuestAction(c.env.DB, userId, 'mint_legendary', id);
+      } else {
+        await trackQuestAction(c.env.DB, userId, 'mint', id);
+      }
+      console.log(`Tracked quest action for minting`);
     }
 
     // Broadcast creation to realtime subscribers

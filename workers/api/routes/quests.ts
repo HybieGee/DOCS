@@ -115,6 +115,10 @@ export async function trackQuestAction(
       await completeAchievement(db, userId, 'achievement_legendary');
     }
     
+    if (actionType === 'droplet_level_5') {
+      await completeAchievement(db, userId, 'achievement_level_5');
+    }
+    
   } catch (error) {
     console.error('Track quest action error:', error);
   }

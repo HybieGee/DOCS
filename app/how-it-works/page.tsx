@@ -46,10 +46,10 @@ export default function HowItWorksPage() {
                 <div className="bg-black/30 rounded-lg p-4 border border-blue-500/20">
                   <h3 className="font-semibold text-blue-400 mb-2">Key Features:</h3>
                   <ul className="space-y-2 text-white/70">
-                    <li>• Daily earning cap of 7,500 $DROPLET per user</li>
                     <li>• Multiple earning mechanisms to reward different activities</li>
                     <li>• Level-based multipliers for enhanced rewards</li>
                     <li>• Community-driven economy with voting rewards</li>
+                    <li>• Automatic passive earning system</li>
                   </ul>
                 </div>
               </div>
@@ -158,7 +158,7 @@ export default function HowItWorksPage() {
                         * Tokens automatically earned every 30 seconds while active
                       </div>
                       <div className="text-sm text-white/60">
-                        * Daily cap: 7,500 $DROPLET maximum per day
+                        * Higher levels earn more tokens per interval
                       </div>
                     </div>
                   </div>
@@ -186,13 +186,6 @@ export default function HowItWorksPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 rounded-lg p-6 border border-yellow-500/30">
-                <h3 className="font-semibold text-yellow-400 text-lg mb-3">⚠️ Daily Cap</h3>
-                <p className="text-white/80">
-                  Maximum earnings are capped at <span className="font-bold text-yellow-400">7,500 $DROPLET</span> per day
-                  to ensure fair distribution and sustainable tokenomics.
-                </p>
-              </div>
             </div>
           )}
 

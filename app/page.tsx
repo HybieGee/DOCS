@@ -375,8 +375,20 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Bottom UI Bar - CA Spot and Roadmap */}
+      {/* Bottom UI Bar - Logo, CA, and Roadmap */}
       <div className="bottom-ui-bar">
+        <div className="absolute left-6 flex items-center gap-3">
+          <svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 10 C30 10, 15 25, 15 45 C15 65, 30 75, 50 90 C70 75, 85 65, 85 45 C85 25, 70 10, 50 10 Z" 
+                  fill="none" 
+                  stroke="white" 
+                  strokeWidth="3"/>
+            <ellipse cx="50" cy="75" rx="25" ry="3" fill="none" stroke="white" strokeWidth="2" opacity="0.6"/>
+            <ellipse cx="50" cy="78" rx="20" ry="2" fill="none" stroke="white" strokeWidth="1.5" opacity="0.4"/>
+            <ellipse cx="50" cy="81" rx="15" ry="1.5" fill="none" stroke="white" strokeWidth="1" opacity="0.3"/>
+          </svg>
+          <span className="text-white/90 text-sm font-medium">Droplets of Creation</span>
+        </div>
         <div className="text-white/70 text-sm">
           <span className="font-mono">CA: Coming Soon</span>
         </div>

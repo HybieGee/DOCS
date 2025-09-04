@@ -259,19 +259,6 @@ export default function RoadmapPage() {
           </div>
         </div>
 
-        {/* Community Input */}
-        <div className="mt-8 bg-gradient-to-br from-slate-900 to-slate-800 rounded-lg p-6 border border-white/10">
-          <h3 className="text-xl font-semibold mb-3">💬 Have Ideas?</h3>
-          <p className="text-white/70 mb-4">
-            This roadmap is shaped by our community. Share your ideas and vote on features you&apos;d like to see!
-          </p>
-          <button 
-            onClick={() => window.location.href = '/vote'}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium"
-          >
-            Vote on Features
-          </button>
-        </div>
 
         {/* Back Button */}
         <div className="mt-12 text-center">
