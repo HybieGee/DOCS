@@ -375,11 +375,17 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Bottom UI Bar - CA Spot */}
+      {/* Bottom UI Bar - CA Spot and Roadmap */}
       <div className="bottom-ui-bar">
         <div className="text-white/70 text-sm">
           <span className="font-mono">CA: Coming Soon</span>
         </div>
+        <button 
+          className="minimal-button text-xs absolute right-6"
+          onClick={() => window.location.href = '/roadmap'}
+        >
+          🗺️ Roadmap
+        </button>
       </div>
 
       {/* Selected Character Card */}
